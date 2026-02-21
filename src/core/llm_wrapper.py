@@ -4,7 +4,7 @@ import requests
 class LLM:
     def __init__(
         self,
-        model: str = "deepseek-coder:6.7b",
+        model: str = "qwen2.5-coder:14b",
         base_url: str = "http://localhost:11434"
     ):
         self.model = model

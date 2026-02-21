@@ -12,7 +12,7 @@ tool_agent = ToolSelectionAgent(llm)
 python_agent = PythonAgent(llm)
 execution_router = ToolExecutorRouter(python_agent=python_agent)
 
-prompt = "Can you sum log(x) from 0 to 100?"
+prompt = "Can you sum log(x) from 1 to 100?"
 
 # Step 1 — Intent classification
 decision = agent.run(prompt)

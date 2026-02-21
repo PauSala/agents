@@ -47,33 +47,22 @@ class PythonAgent(BaseAgent):
 
     def build_prompt(self, task: str) -> str:
         return f"""
-You are a Python code writer agent.
+Act as a deterministic Python Code Generator. Your output is consumed by a JSON parser.
 
-You must generate a Python working file to solve the given task, importing built-in modules if necessary.
-
-TASK:
+### TASK
+Generate a Python script that executes the following task and prints the final result:
 {task}
 
-STRICT OUTPUT RULES:
-- Do not generate markdown.
-- Do not wrap JSON inside code fences.
-- Output ONLY valid JSON.
-- The response must start with '{' and end with '}'.
-- The Python code must print the final result using print().
-- Do not generate any text outside JSON.
-- Do not generate greetings or explanations.
-- Do not output chain-of-thought reasoning.
-
-OUTPUT FORMAT:
-
+### JSON SCHEMA
 {{
     "arguments": {{
-        "code": "python file contents"
+        "code": "A string containing valid, PEP8 compliant Python code. Use '\\n' for line breaks and escape double quotes."
     }}
 }}
 
-NEGATIVE RULES:
-- Never output conversational text.
-- Never output ```json or ``` blocks.
-- Never add commentary after JSON.
+### STRICT CONSTRAINTS
+- Output ONLY the raw JSON object.
+- No Markdown backticks (```).
+- No conversational filler.
+- The Python code MUST include a print() statement for the final result.
 """
