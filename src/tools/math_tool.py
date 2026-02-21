@@ -20,7 +20,7 @@ class MathTool(Tool[MathInput, MathOutput]):
     """Math tool that executes Python math expressions in a restricted namespace."""
 
     name = "math"
-    description = "Execute Python math expressions and return the result"
+    description = "Execute Python math expressions and return the result. Parameters: mathematical expression as a string"
     input_schema = MathInput
 
     def execute(self, input_data: MathInput) -> MathOutput:

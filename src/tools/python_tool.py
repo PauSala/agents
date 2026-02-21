@@ -23,10 +23,10 @@ class PythonCodeOutput(BaseModel):
 
 
 class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
-    """Execute isolated Python code in a sandboxed subprocess. Required code not to be quoted"""
+    """Execute isolated Python code in a sandboxed subprocess."""
 
     name = "python"
-    description = "Execute isolated Python code in a sandboxed subprocess"
+    description = "Execute isolated Python code in a sandboxed subprocess. Expects a valid python file to execute. Parameters: valid python file contents"
     input_schema = PythonCodeInput
 
     MAX_CODE_LENGTH = 5000
@@ -61,7 +61,6 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
 
     def execute(self, input_data: PythonCodeInput) -> PythonCodeOutput:
         code = input_data.code.strip()
-        print(code)
 
         if len(code) > self.MAX_CODE_LENGTH:
             return PythonCodeOutput(output="", error="Code too long", success=False)

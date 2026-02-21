@@ -59,6 +59,7 @@ INSTRUCTIONS:
     "tool_name": "name_of_the_tool",
     "arguments": {{"argument_name": "argument_value"}}
 }}
+4. Do not quote the argument_value when it's code to execute
 
 RULES:
 - Never output markdown or free text outside JSON
