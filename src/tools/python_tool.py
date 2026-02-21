@@ -26,7 +26,7 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
     """Execute isolated Python code in a sandboxed subprocess."""
 
     name = "python"
-    description = "Execute isolated Python code in a sandboxed subprocess. Expects a valid python file to execute. Parameters: valid python file contents"
+    description = "Execute isolated Python code in a sandboxed subprocess."
     input_schema = PythonCodeInput
 
     MAX_CODE_LENGTH = 5000
@@ -35,7 +35,7 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
     CPU_TIME_LIMIT_SECONDS = 2
 
     def _limit_resources(self):
-        """Apply resource limits (Unix only)."""
+        """Apply resource limits (Unix-like systems including macOS and Linux)."""
         # Limit CPU time
         try:
             if hasattr(resource, "RLIMIT_CPU"):
@@ -43,9 +43,8 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
                     resource.RLIMIT_CPU,
                     (self.CPU_TIME_LIMIT_SECONDS, self.CPU_TIME_LIMIT_SECONDS),
                 )
-        except Exception:
-            # If setting RLIMIT_CPU fails, ignore to avoid crashing the child process
-            pass
+        except Exception as e:
+            print(f"[resource-limit-error][RLIMIT_CPU] {e}", file=sys.stderr)
 
         # Limit memory usage (may not be supported on all platforms)
         try:
@@ -55,8 +54,8 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
                     resource.RLIMIT_AS,
                     (memory_bytes, memory_bytes),
                 )
-        except Exception:
-            # Ignore failures (some OSes disallow or don't support RLIMIT_AS)
+        except Exception as e:
+            # macOS may not support strict RLIMIT_AS enforcement
             pass
 
     def execute(self, input_data: PythonCodeInput) -> PythonCodeOutput:

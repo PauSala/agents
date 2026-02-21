@@ -4,14 +4,14 @@ from core.inference_guard import InvalidResponse
 
 
 class DecisionAgent(BaseAgent):
-    def run(self, task: str):
+    def run(self, task: str) -> InvalidResponse | AgentDecision:
         prompt = self.build_prompt(task)
         parsed = self.guard.run_structured_inference(self.llm, prompt, AgentDecision)
 
         if parsed is None:
             return InvalidResponse(reason="Invalid JSON output after retries")
 
-        return parsed.model_dump()
+        return parsed
     
     def build_prompt(self, task: str) -> str:
         return f"""

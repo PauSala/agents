@@ -1,24 +1,17 @@
-from typing import Any, Optional
-
-from pydantic import BaseModel
+from typing import Any
 
 from agents.base_agent import BaseAgent
+from agents.types import ToolCall
 from core.inference_guard import InvalidResponse
 from core.llm_wrapper import LLM
 from tools.registry import ToolRegistry, ToolSpec
 
 
-class ToolCall(BaseModel):
-    """Schema for tool execution."""
-    tool_name: str
-    arguments: dict[str, Any]
-
-
 class ToolAgent(BaseAgent):
     """Agent that selects and executes tools based on task description."""
 
-    def __init__(self, llm: LLM, tools: Optional[dict[str, object]] = None):
-        super().__init__(llm, tools)
+    def __init__(self, llm: LLM):
+        super().__init__(llm)
         self.registry = ToolRegistry()
 
     def run(self, task: str) -> InvalidResponse | dict[str, Any]:

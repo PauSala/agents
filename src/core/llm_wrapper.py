@@ -16,7 +16,7 @@ class LLM:
         payload: dict[str, str | bool] = {
             "model": self.model,
             "prompt": prompt,
-            "stream": False
+            "stream": False,
         }
 
         response = requests.post(url, json=payload)
