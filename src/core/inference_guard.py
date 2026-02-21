@@ -26,6 +26,7 @@ class InferenceGuard:
         for _ in range(self.max_retries):
 
             output = llm.generate(prompt)
+            print(output)
             parsed = self.parse_json(output)
 
             if parsed is None:

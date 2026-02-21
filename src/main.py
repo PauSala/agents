@@ -1,7 +1,7 @@
-from agents.base_agent import BaseAgent, AgentRole
+from agents.decision_agent import DecisionAgent
 from core.llm_wrapper import LLM
 
 llm = LLM()
-agent = BaseAgent(AgentRole.ORQUESTRATOR, llm)
+agent = DecisionAgent(llm)
 
-print(agent.run("Say hello"))
+print(agent.run("Can you tell me how to start a project in Rust?"))
