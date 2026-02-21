@@ -1,10 +1,17 @@
 import json
 from typing import Type, TypeVar
+
 from pydantic import BaseModel
 
 from core.llm_wrapper import LLM
 
 T = TypeVar("T", bound=BaseModel)
+
+class TextResponse(BaseModel):
+    response: str
+
+class InvalidResponse(BaseModel):
+    reason: str
 
 
 class InferenceGuard:
@@ -17,8 +24,8 @@ class InferenceGuard:
             return json.loads(text)
         except Exception:
             return None
-
-    def generate_and_validate(self, llm: LLM, prompt: str, schema: Type[T]) -> T | None:
+        
+    def run_structured_inference(self, llm: LLM, prompt: str, schema: Type[T]) -> T | None:
         """
         Run inference + validation with retry.
         """
@@ -36,5 +43,17 @@ class InferenceGuard:
                 return schema(**parsed)
             except Exception:
                 continue
+
+        return None
+    
+    def run_text_inference(self, llm: LLM, prompt: str) -> TextResponse| None:
+        """
+        Run inference and wrap model output into {response: text}.
+        """
+
+        for _ in range(self.max_retries):
+
+            output = llm.generate(prompt)
+            return TextResponse(response=output)
 
         return None

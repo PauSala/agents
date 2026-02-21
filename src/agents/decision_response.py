@@ -1,6 +1,8 @@
-from typing import Optional, Any
-from pydantic import BaseModel
 from enum import Enum
+from typing import Any, Optional
+
+from pydantic import BaseModel
+
 
 class DecisionType(Enum):
     EXPLAIN = "explain"
