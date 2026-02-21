@@ -4,8 +4,8 @@ from core.inference_guard import InvalidResponse
 from inspect import cleandoc
 
 
-class DecisionAgent(BaseAgent):
-    def run(self, task: str) -> InvalidResponse | AgentDecision:
+class DecisionAgent(BaseAgent[AgentDecision]):
+    def run(self, task: str) -> AgentDecision | InvalidResponse:
         prompt = self.build_prompt(task)
         parsed = self.guard.run_structured_inference(self.llm, prompt, AgentDecision)
 
@@ -41,13 +41,13 @@ class DecisionAgent(BaseAgent):
               Use when the task requires explanation or reasoning.
             
             - tool:
-              Use when the task requires performing an action (APIs, FS, maths).
+              Use when the task requires performing an action that could require a tool (APIs, FS, Math).
 
             - code:
               Use when asked to generate code.
 
             - fail:
-              Use when the task is invalid.
+              Use only when the task is impossible to be resolved by a tool.
 
             ----
 

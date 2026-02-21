@@ -1,13 +1,12 @@
-from typing import Any
 from inspect import cleandoc
 from agents.base_agent import BaseAgent
 from agents.types import ToolCall
 from core.inference_guard import InvalidResponse
 from core.llm_wrapper import LLM
-from tools.python_tool import PythonCodeTool
+from tools.python_tool import PythonCodeTool, PythonCodeOutput
 
-class PythonAgent(BaseAgent):
-    def __init__(self, llm: LLM, max_retries: int = 2):
+class PythonAgent(BaseAgent[PythonCodeOutput]):
+    def __init__(self, llm: LLM, max_retries: int = 6):
         super().__init__(llm)
         self.python_tool = PythonCodeTool()
         self._max_retries_limit = max_retries
@@ -21,11 +20,10 @@ class PythonAgent(BaseAgent):
             }
         """)
 
-    def run(self, task: str, previous_error: str | None = None, failed_code: str = "") -> Any:
+    def run(self, task: str, previous_error: str | None = None, failed_code: str = "") -> PythonCodeOutput | InvalidResponse:
         if previous_error and failed_code:
             prompt = self.build_fix_prompt(task, failed_code, previous_error)
         else:
-            self.current_retries = 0 
             prompt = self.build_prompt(task)
 
         parsed = self.guard.run_structured_inference(self.llm, prompt, ToolCall)
@@ -45,7 +43,7 @@ class PythonAgent(BaseAgent):
                 self.current_retries += 1
                 return self.run(task, previous_error=result.error, failed_code=code_attr)
             
-            return result.model_dump()
+            return result
 
         except Exception as e:
             if self.current_retries < self._max_retries_limit:

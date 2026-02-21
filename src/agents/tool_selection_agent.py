@@ -6,14 +6,14 @@ from core.llm_wrapper import LLM
 from tools.registry import ToolRegistry, ToolSpec
 from inspect import cleandoc
 
-class ToolSelectionAgent(BaseAgent):
+class ToolSelectionAgent(BaseAgent[ToolSelection]):
     """Agent that selects tools based on task description."""
 
-    def __init__(self, llm: LLM):
+    def __init__(self, llm: LLM, registry: ToolRegistry):
         super().__init__(llm)
-        self.registry = ToolRegistry()
+        self.registry = registry
 
-    def run(self, task: str) -> InvalidResponse | ToolSelection:
+    def run(self, task: str) -> ToolSelection | InvalidResponse:
         """Execute task by selecting and running appropriate tool."""
         prompt = self.build_prompt(task)
         parsed = self.guard.run_structured_inference(self.llm, prompt, ToolSelection)

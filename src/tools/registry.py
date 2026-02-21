@@ -1,9 +1,9 @@
-"""Tool registry for managing and executing tools."""
+"""Tool registry — single source of truth for tool specs and execution."""
 
-from typing import Optional, Any, TypedDict
+from typing import Any, Callable, TypedDict
 
+from agents.types import ToolSelection
 from tools.tool import Tool
-from tools.python_tool import PythonCodeTool
 
 
 class ToolSpec(TypedDict):
@@ -14,54 +14,42 @@ class ToolSpec(TypedDict):
 
 
 class ToolRegistry:
-    """Registry to manage tools and execute them by name."""
+    """Registry to manage tools and route execution by name."""
 
     def __init__(self):
-        self._tools: dict[str, Tool[Any, Any]] = {
-            "python": PythonCodeTool(),
-        }
+        self._tools: dict[str, Tool[Any, Any]] = {}
+        self._handlers: dict[str, Callable[[str], Any]] = {}
 
-    def get(self, name: str) -> Optional[Tool[Any, Any]]:
-        """Get a tool by name.
+    def register(self, tool: Tool[Any, Any], handler: Callable[[str], Any]) -> None:
+        """Register a tool and its execution handler.
 
         Args:
-            name: The tool name
-
-        Returns:
-            The Tool instance or None if not found
+            tool: The Tool instance (provides name, description, schema for prompts)
+            handler: Callable that receives a prompt string and returns a result
         """
-        return self._tools.get(name)
+        self._tools[tool.name] = tool
+        self._handlers[tool.name] = handler
 
-    def execute(self, name: str, **kwargs: Any) -> Any:
-        """Execute a tool by name.
+    def execute(self, selection: ToolSelection) -> Any:
+        """Execute a tool by routing to its registered handler.
 
         Args:
-            name: The tool name
-            **kwargs: Arguments to pass to the tool (must match tool's input type)
-
-        Returns:
-            The tool's output
+            selection: The tool selection containing tool_name and prompt
 
         Raises:
-            ValueError: If the tool is not found
+            ValueError: If no handler is registered for the tool
         """
-        tool = self.get(name)
-        if tool is None:
-            raise ValueError(f"Tool '{name}' not found")
-        # Instantiate the input schema from kwargs
-        input_instance = tool.input_schema(**kwargs)
-        return tool.execute(input_instance)
+        handler = self._handlers.get(selection.tool_name)
+        if not handler:
+            raise ValueError(f"No handler registered for tool '{selection.tool_name}'")
+        return handler(selection.prompt)
 
     def list_tools(self) -> list[str]:
         """Get list of all registered tool names."""
         return list(self._tools.keys())
 
     def get_tool_specs(self) -> list[ToolSpec]:
-        """Get specifications of all tools for LLM prompt.
-
-        Returns:
-            List of tool specs with name, description, and input schema
-        """
+        """Get specifications of all tools for LLM prompt."""
         specs: list[ToolSpec] = []
         for tool in self._tools.values():
             specs.append(

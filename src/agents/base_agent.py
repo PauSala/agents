@@ -1,21 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Generic, TypeVar
 
-from agents.decision_response import AgentDecision
-from agents.types import ToolCall, ToolSelection
-from core.inference_guard import InferenceGuard, InvalidResponse, TextResponse
+from core.inference_guard import InferenceGuard, InvalidResponse
 from core.llm_wrapper import LLM
 from inspect import cleandoc
 
+T = TypeVar("T")
 
-class BaseAgent(ABC):
+
+class BaseAgent(ABC, Generic[T]):
     def __init__(self, llm: LLM):
         self.llm = llm
         self.guard = InferenceGuard()
 
-
     @abstractmethod
-    def run(self, task: str) -> AgentDecision | TextResponse | InvalidResponse | ToolSelection |  ToolCall | dict[str, Any]:
+    def run(self, task: str) -> T | InvalidResponse:
         """Subclasses must implement this to provide their specific run."""
         pass
     
