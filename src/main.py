@@ -4,4 +4,4 @@ from core.llm_wrapper import LLM
 llm = LLM()
 agent = DecisionAgent(llm)
 
-print(agent.run("Can you implement quick sort in java?"))
+print(agent.run("Can you sum sqrt(7) + log(2)?"))

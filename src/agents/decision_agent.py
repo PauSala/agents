@@ -15,21 +15,45 @@ class DecisionAgent(BaseAgent):
     
     def build_prompt(self, task: str) -> str:
         return f"""
-You are a workflow decision classifier, you must classify the given TASK into EXPLAIN | TOOL | CODE | FAIL.
+You are a workflow decision classifier.
+
+You must classify the given TASK into one of:
+EXPLAIN | TOOL | CODE | FAIL.
 
 TASK:
 {task}
 
 ----
 
+CLASSIFICATION RULES:
+
+- EXPLAIN:
+  Use when the task requires explanation, description, reasoning, or informational response only.
+  No execution or code artifact is required.
+
+- TOOL:
+  Use when the task requires performing an action in the system
+  (e.g., filesystem operations, external APIs, database access, calculations using a runtime tool).
+
+- CODE:
+  Use when the task requires generating source code as the final artifact
+  (e.g., implementing an algorithm in a specific programming language).
+
+- FAIL:
+  Use when the task cannot be completed or is invalid.
+
+----
+
 STRICT OUTPUT RULES:
-- You must output ONLY valid JSON:
-- Your output allways matches this schema:
+- You must output ONLY valid JSON.
+- Output must always match this exact schema:
+
 {{
     "type": "explain | tool | code | fail",
     "reason": "mandatory explanation of why the task has been classified into the type"
 }}
-- Never quote the json
-- You must not output markdown nor free text
 
+- Never wrap the JSON in quotes.
+- Do not output markdown.
+- Do not output free text outside the JSON.
 """
