@@ -12,7 +12,7 @@ tool_agent = ToolSelectionAgent(llm)
 python_agent = PythonAgent(llm)
 execution_router = ToolExecutorRouter(python_agent=python_agent)
 
-prompt = "Sum from 1 to 10000"
+prompt = "Give me a list of 30 numbers alternating negative and positives, starting from 0"
 
 # Step 1 — Intent classification
 decision = agent.run(prompt)
