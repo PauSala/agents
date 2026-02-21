@@ -27,10 +27,6 @@ STRICT OUTPUT RULES:
 - Your output allways matches this schema:
 {{
     "type": "explain | tool | code | fail",
-    "tool": {{
-        "name": "tool_name",
-        "args": {{}}
-    }},
     "reason": "mandatory explanation of why the task has been classified into the type"
 }}
 - Never quote the json

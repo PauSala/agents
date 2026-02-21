@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -14,5 +14,4 @@ class DecisionType(Enum):
 class AgentDecision(BaseModel):
     type: DecisionType
     content: Optional[str] = None
-    tool: Optional[dict[str, Any]] = None
     reason: Optional[str] = None
