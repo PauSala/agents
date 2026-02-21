@@ -1,11 +1,17 @@
-from pydantic import BaseModel
 from core.llm_wrapper import LLM
 from core.inference_guard import InferenceGuard
-from .agent_response import AgentResponse
+from .agent_response import AgentDecision
+from enum import Enum
+
+class AgentRole(Enum):
+    ORQUESTRATOR = "orquestrator"
+    SUPERVISOR = "supervisor"
+    EXECUTOR = "executor"
+
 
 
 class BaseAgent:
-    def __init__(self, role: str, llm: LLM, tools: dict | None = None):
+    def __init__(self, role: AgentRole, llm: LLM, tools: dict[str, object] | None = None):
         self.role = role
         self.llm = llm
         self.tools = tools or {}
@@ -14,7 +20,7 @@ class BaseAgent:
 
     def run(self, task: str):
         prompt = self.build_prompt(task)
-        parsed = self.guard.generate_and_validate(self.llm, prompt, AgentResponse)
+        parsed = self.guard.generate_and_validate(self.llm, prompt, AgentDecision)
 
         if parsed is None:
             return {
@@ -22,7 +28,7 @@ class BaseAgent:
                 "reason": "Invalid JSON output after retries"
             }
 
-        return parsed.dict()
+        return parsed.model_dump()
     
     def build_prompt(self, task: str) -> str:
         return f"""

@@ -2,6 +2,8 @@ import json
 from typing import Type, TypeVar
 from pydantic import BaseModel
 
+from core.llm_wrapper import LLM
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -16,7 +18,7 @@ class InferenceGuard:
         except Exception:
             return None
 
-    def generate_and_validate(self, llm, prompt: str, schema: Type[T]) -> T | None:
+    def generate_and_validate(self, llm: LLM, prompt: str, schema: Type[T]) -> T | None:
         """
         Run inference + validation with retry.
         """

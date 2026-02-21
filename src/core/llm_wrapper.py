@@ -13,7 +13,7 @@ class LLM:
     def generate(self, prompt: str) -> str:
         url = f"{self.base_url}/api/generate"
 
-        payload = {
+        payload: dict[str, str | bool] = {
             "model": self.model,
             "prompt": prompt,
             "stream": False
