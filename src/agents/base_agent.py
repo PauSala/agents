@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from agents.decision_response import AgentDecision
 from core.inference_guard import InferenceGuard
 from core.llm_wrapper import LLM
 
@@ -14,7 +15,7 @@ class BaseAgent(ABC):
 
 
     @abstractmethod
-    def run(self, task: str) -> Any:
+    def run(self, task: str) -> AgentDecision | dict[str, Any] | str:
         """Subclasses must implement this to provide their specific run."""
         pass
     
