@@ -5,6 +5,7 @@ from agents.types import ToolCall
 from core.inference_guard import InvalidResponse
 from core.llm_wrapper import LLM
 from tools.python_tool import PythonCodeTool
+from inspect import cleandoc
 
 
 class PythonAgent(BaseAgent):
@@ -46,23 +47,22 @@ class PythonAgent(BaseAgent):
             )
 
     def build_prompt(self, task: str) -> str:
-        return f"""
-Act as a deterministic Python Code Generator. Your output is consumed by a JSON parser.
+        schema = cleandoc("""
+            {
+                "arguments": {
+                    "code": "A string containing valid, PEP8 compliant Python code. Use line breaks and escape double quotes."
+                }
+            }
+        """)
+        output_constraints = self.json_output_instructions(schema)
+        return cleandoc(f"""
+            Act as a deterministic Python Code Generator. Your output is consumed by a JSON parser.
 
-### TASK
-Generate a Python script that executes the following task and prints the final result:
-{task}
+            ### TASK
+            Generate a Python script that executes the following task and prints the final result:
+            {task}
 
-### JSON SCHEMA
-{{
-    "arguments": {{
-        "code": "A string containing valid, PEP8 compliant Python code. Use '\\n' for line breaks and escape double quotes."
-    }}
-}}
-
-### STRICT CONSTRAINTS
-- Output ONLY the raw JSON object.
-- No Markdown backticks (```).
-- No conversational filler.
-- The Python code MUST include a print() statement for the final result.
-"""
+            {output_constraints}
+            - The Python code MUST include a print() statement for the final result.
+            
+        """)

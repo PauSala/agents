@@ -4,7 +4,7 @@ from agents.types import ToolSelection
 from core.inference_guard import InvalidResponse
 from core.llm_wrapper import LLM
 from tools.registry import ToolRegistry, ToolSpec
-
+from inspect import cleandoc
 
 class ToolSelectionAgent(BaseAgent):
     """Agent that selects tools based on task description."""
@@ -26,35 +26,31 @@ class ToolSelectionAgent(BaseAgent):
     def build_prompt(self, task: str) -> str:
         """Build prompt with available tools and task description."""
         tools_info = self._format_tools_info()
+        schema = cleandoc("""
+            {
+                "tool_name": "exact_tool_id",
+                "prompt": "Plain language summary of the objective"
+            }
+        """)
+        output_constraints = self.json_output_instructions(schema)
         
-        return f"""
-Act as a precise Router Agent. Your sole purpose is to map a User Request to the correct Tool Name and provide a clean, high-level intent string.
-
-### AVAILABLE TOOLS
-{tools_info}
-
-### USER REQUEST
-{task}
-
-### INSTRUCTIONS
-1. **IDENTIFY**: Select the single most appropriate `tool_name` from the list above.
-2. **STRIP**: Remove all implementation details, coding logic, variable names, and technical constraints from the request.
-3. **RESTATE**: Provide a "prompt" that is a plain-language summary of the goal.
-
-### OUTPUT FORMAT
-Output ONLY a raw JSON object. No markdown blocks, no conversational text, and no quotes outside the JSON.
-
-{{
-    "tool_name": "exact_tool_id",
-    "prompt": "Plain language summary of the objective"
-}}
-
-### STRICT NEGATIVE CONSTRAINTS
-- NO code snippets or logic (e.g., no 'for loops', 'imports', or 'functions').
-- NO formatting symbols or backticks.
-- NO mentions of tool metadata or documentation.
-- NO conversational filler.
-"""
+        return cleandoc(f"""
+            Act as a precise Router Agent. Your sole purpose is to map a User Request to the correct Tool Name and provide a clean, high-level intent string.
+    
+            ### AVAILABLE TOOLS
+            {tools_info}
+    
+            ### USER REQUEST
+            {task}
+    
+            ### INSTRUCTIONS
+            1. **IDENTIFY**: Select the single most appropriate `tool_name` from the list above.
+            2. **STRIP**: Remove all implementation details, coding logic, variable names, and technical constraints from the request.
+            3. **RESTATE**: Provide a "prompt" that is a plain-language summary of the goal.
+    
+            {output_constraints}
+        """)
+    
     def _format_tools_info(self) -> str:
         """Return minimal tool registry representation for prompt routing."""
     
