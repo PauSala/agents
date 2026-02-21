@@ -45,15 +45,15 @@ CLASSIFICATION RULES:
 ----
 
 STRICT OUTPUT RULES:
-- You must output ONLY valid JSON.
-- Output must always match this exact schema:
+- Output ONLY parseable JSON.
+- Output must always match this exact JSON schema:
 
 {{
     "type": "explain | tool | code | fail",
     "reason": "mandatory explanation of why the task has been classified into the type"
 }}
 
-- Never wrap the JSON in quotes.
+- Do not wrap JSON inside code fences.
 - Do not output markdown.
 - Do not output free text outside the JSON.
 """

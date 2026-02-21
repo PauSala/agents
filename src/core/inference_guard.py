@@ -25,6 +25,21 @@ class InferenceGuard:
         except Exception:
             return None
         
+    # TODO: This is bullshit fuck LLMs
+    def strip_code_fences(self, text: str) -> str:
+        text = text.strip()
+
+        if text.startswith("```"):
+            lines = text.splitlines()
+            lines = lines[1:]
+
+            if lines and lines[-1].strip().startswith("```"):
+                lines = lines[:-1]
+
+            text = "\n".join(lines).strip()
+
+        return text
+        
     def run_structured_inference(self, llm: LLM, prompt: str, schema: Type[T]) -> T | None:
         """
         Run inference + validation with retry.
@@ -34,7 +49,7 @@ class InferenceGuard:
 
             output = llm.generate(prompt)
             print(output)
-            parsed = self.parse_json(output)
+            parsed = self.parse_json(self.strip_code_fences(output))
 
             if parsed is None:
                 continue

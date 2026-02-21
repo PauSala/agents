@@ -10,5 +10,4 @@ class ToolSelection(BaseModel):
 
 class ToolCall(BaseModel):
     """Schema for tool execution."""
-    tool_name: str
     arguments: dict[str, Any]
