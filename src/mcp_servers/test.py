@@ -1,7 +1,10 @@
 import asyncio
+import json
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from pathlib import Path
+
+from core.llm_wrapper import LLM
 
 # docs: https://mcpservers.org/servers/github-com-kmalakoff-mcp-pdf
 
@@ -22,25 +25,21 @@ async def run_pdf_agent():
             # Initialize the connection
             await session.initialize()
             mcp_tools = await session.list_tools()
-            print(mcp_tools)
-
+            llm = LLM()
+            response = llm.generate_with_tools(
+                "Create a PDF demonstration of the pythagoras theorem. Make it pretty, don't add images nor latex", 
+                mcp_tools.tools
+            )
+            raw = response["message"]["content"]
+            if raw:
+                print(raw)
+                parsed = json.loads(raw)   # convert string → dict
+                arguments = parsed["arguments"]
+                print(arguments)
             # 3. Call the PDF creation tool
             # Example: Creating a simple PDF invoice or document
-            result = await session.call_tool("pdf-document", arguments={
-                "filename": "my_report.pdf",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "Hello from my Python Agent!"
-                    },
-                    {
-                        "type": "text",
-                        "text": "This line is now properly structured for the PDF server."
-                    }
-                ]
-            })
-
-            print(f"Server Response: {result}")
+                result = await session.call_tool("pdf-document", arguments=arguments)
+                print(f"Server Response: {result}")
 
 if __name__ == "__main__":
     asyncio.run(run_pdf_agent())

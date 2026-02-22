@@ -1,5 +1,6 @@
-from typing import Any
+from typing import Any, List
 
+from mcp import Tool
 import requests
 
 
@@ -30,3 +31,30 @@ class LLM:
         response.raise_for_status()
 
         return response.json()["response"]
+    
+    ## TODO: add this to base model
+    def generate_with_tools(self, prompt: str,  tools: List[Tool] = []) -> dict[str, Any]:
+            # Convert MCP tools to Ollama-friendly tool definitions
+            ollama_tools: List[dict[str, Any]] = []
+            for tool in tools:
+                ollama_tools.append({
+                    "type": "function",
+                    "function": {
+                        "name": tool.name,
+                        "description": tool.description,
+                        "parameters": tool.inputSchema,
+                    }
+                })
+
+            payload: dict[str, Any]  = {
+                "model": self.model,
+                "messages": [{"role": "user", "content": prompt}],
+                "tools": ollama_tools, 
+                "stream": False,
+            }
+
+            response = requests.post(f"{self.base_url}/api/chat", json=payload)
+            response.raise_for_status()
+                
+            # Return the whole message object (contains 'content' AND 'tool_calls')
+            return response.json()
