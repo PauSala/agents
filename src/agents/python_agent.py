@@ -2,12 +2,13 @@ from inspect import cleandoc
 from agents.base_agent import BaseAgent
 from agents.types import ToolCall
 from core.inference_guard import InvalidResponse
+from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
 from tools.python_tool import PythonCodeTool, PythonCodeOutput
 
 class PythonAgent(BaseAgent[PythonCodeOutput]):
-    def __init__(self, llm: LLM, max_retries: int = 6):
-        super().__init__(llm)
+    def __init__(self, llm: LLM, max_retries: int = 6, log: LogCollector | None = None):
+        super().__init__(llm, log)
         self.python_tool = PythonCodeTool()
         self.max_retries = max_retries
         
@@ -20,12 +21,14 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         """)
 
     def run(self, task: str) -> PythonCodeOutput | InvalidResponse:
+        self.log.log("PythonAgent", "start", task=task)
         previous_error: str | None = None
         failed_code = ""
         result: PythonCodeOutput | None = None
 
-        for _ in range(self.max_retries + 1):
+        for attempt in range(self.max_retries + 1):
             if previous_error and failed_code:
+                self.log.log("PythonAgent", "retry", attempt=attempt, error=previous_error)
                 prompt = self.build_fix_prompt(task, failed_code, previous_error)
             else:
                 prompt = self.build_prompt(task)
@@ -33,10 +36,12 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             parsed = self.guard.run_structured_inference(prompt, ToolCall)
 
             if not parsed:
+                self.log.log("PythonAgent", "failed", reason="Failed to parse code execution request")
                 return InvalidResponse(reason="Failed to parse code execution request")
 
             code_attr = parsed.arguments.get("code")
             if not isinstance(code_attr, str):
+                self.log.log("PythonAgent", "failed", reason="LLM returned non-string code attribute")
                 return InvalidResponse(reason="LLM returned non-string code attribute")
 
             try:
@@ -48,11 +53,13 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
                 continue
 
             if result.success:
+                self.log.log("PythonAgent", "success", output=result.output)
                 return result
 
             previous_error = result.error
             failed_code = code_attr
 
+        self.log.log("PythonAgent", "exhausted", attempts=self.max_retries + 1)
         return result if result is not None else InvalidResponse(reason="Python tool failed after retries")
 
     def build_fix_prompt(self, task: str, failed_code: str, error: str) -> str:

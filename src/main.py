@@ -3,19 +3,21 @@ from agents.decision_response import AgentDecision, DecisionType
 from agents.python_agent import PythonAgent
 from agents.tool_selection_agent import ToolSelectionAgent
 from agents.types import ToolSelection
+from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
 from tools.python_tool import PythonCodeTool
 from tools.registry import ToolRegistry
 
 llm = LLM()
+log = LogCollector()
 
 # Build the registry — single source of truth for tools
 registry = ToolRegistry()
-python_agent = PythonAgent(llm)
+python_agent = PythonAgent(llm, log=log)
 registry.register(PythonCodeTool(), handler=python_agent.run)
 
-agent = DecisionAgent(llm)
-tool_agent = ToolSelectionAgent(llm, registry=registry)
+agent = DecisionAgent(llm, log=log)
+tool_agent = ToolSelectionAgent(llm, registry=registry, log=log)
 
 prompt = "Give me a list of 30 numbers alternating negative and positives, starting from 0"
 
@@ -33,3 +35,6 @@ if isinstance(decision, AgentDecision) and decision.type == DecisionType.TOOL:
 
 else:
     print("Non-tool task or invalid decision")
+
+print("\n--- Agent Log ---")
+print(log.summary())

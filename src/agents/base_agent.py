@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
 from core.inference_guard import InferenceGuard, InvalidResponse
+from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
 from inspect import cleandoc
 
@@ -9,9 +10,10 @@ T = TypeVar("T")
 
 
 class BaseAgent(ABC, Generic[T]):
-    def __init__(self, llm: LLM):
+    def __init__(self, llm: LLM, log: LogCollector | None = None):
         self.llm = llm
         self.guard = InferenceGuard(llm)
+        self.log = log or LogCollector()
 
     @abstractmethod
     def run(self, task: str) -> T | InvalidResponse:
