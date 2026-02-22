@@ -7,9 +7,9 @@ from core.llm_wrapper import LLM
 from tools.python_tool import PythonCodeTool, PythonCodeOutput
 
 class PythonAgent(BaseAgent[PythonCodeOutput]):
-    def __init__(self, llm: LLM, max_retries: int = 6, log: LogCollector | None = None):
+    def __init__(self, llm: LLM, tool: PythonCodeTool, max_retries: int = 6, log: LogCollector | None = None):
         super().__init__(llm, log)
-        self.python_tool = PythonCodeTool()
+        self.python_tool = tool
         self.max_retries = max_retries
         
         self.code_schema = cleandoc("""

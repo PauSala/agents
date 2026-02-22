@@ -1,8 +1,8 @@
 from agents.decision_agent import DecisionAgent
-from agents.decision_response import AgentDecision, DecisionType
+from agents.decision_response import DecisionType
 from agents.python_agent import PythonAgent
 from agents.tool_selection_agent import ToolSelectionAgent
-from agents.types import ToolSelection
+from core.inference_guard import InvalidResponse
 from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
 from tools.python_tool import PythonCodeTool
@@ -13,8 +13,9 @@ log = LogCollector()
 
 # Build the registry — single source of truth for tools
 registry = ToolRegistry()
-python_agent = PythonAgent(llm, log=log)
-registry.register(PythonCodeTool(), handler=python_agent.run)
+python_tool = PythonCodeTool()
+python_agent = PythonAgent(llm, tool=python_tool, log=log)
+registry.register(python_tool, handler=python_agent.run)
 
 agent = DecisionAgent(llm, log=log)
 tool_agent = ToolSelectionAgent(llm, registry=registry, log=log)
@@ -24,17 +25,22 @@ prompt = "Give me a list of 30 numbers alternating negative and positives, start
 # Step 1 — Intent classification
 decision = agent.run(prompt)
 
-if isinstance(decision, AgentDecision) and decision.type == DecisionType.TOOL:
+if isinstance(decision, InvalidResponse):
+    print(f"Decision failed: {decision.reason}")
+elif decision.type == DecisionType.TOOL:
     tool_selection = tool_agent.run(prompt)
 
-    if isinstance(tool_selection, ToolSelection):
-        response = registry.execute(tool_selection)
-        print(response)
+    if isinstance(tool_selection, InvalidResponse):
+        print(f"Tool selection failed: {tool_selection.reason}")
     else:
-        print("Tool routing failed")
+        response = registry.execute(tool_selection)
 
+        if isinstance(response, InvalidResponse):
+            print(f"Tool execution failed: {response.reason}")
+        else:
+            print(response)
 else:
-    print("Non-tool task or invalid decision")
+    print("Non-tool task — not yet implemented")
 
 print("\n--- Agent Log ---")
 print(log.summary())

@@ -3,6 +3,7 @@
 from typing import Any, Callable, TypedDict
 
 from agents.types import ToolSelection
+from core.inference_guard import InvalidResponse
 from tools.tool import Tool
 
 
@@ -30,18 +31,15 @@ class ToolRegistry:
         self._tools[tool.name] = tool
         self._handlers[tool.name] = handler
 
-    def execute(self, selection: ToolSelection) -> Any:
-        """Execute a tool by routing to its registered handler.
+    def get_tool(self, name: str) -> Tool[Any, Any] | None:
+        """Get a tool instance by name."""
+        return self._tools.get(name)
 
-        Args:
-            selection: The tool selection containing tool_name and prompt
-
-        Raises:
-            ValueError: If no handler is registered for the tool
-        """
+    def execute(self, selection: ToolSelection) -> Any | InvalidResponse:
+        """Execute a tool by routing to its registered handler."""
         handler = self._handlers.get(selection.tool_name)
         if not handler:
-            raise ValueError(f"No handler registered for tool '{selection.tool_name}'")
+            return InvalidResponse(reason=f"No handler registered for tool '{selection.tool_name}'")
         return handler(selection.prompt)
 
     def list_tools(self) -> list[str]:

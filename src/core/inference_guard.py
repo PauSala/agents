@@ -1,8 +1,8 @@
 import json
 import re
-from typing import Type, TypeVar
+from typing import Any, Type, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from core.llm_wrapper import LLM
 
@@ -21,7 +21,7 @@ class InferenceGuard:
         self.llm = llm
         self.max_retries = max_retries
 
-    def parse_json(self, text: str):
+    def parse_json(self, text: str) -> dict[str, Any] | None:
         try:
             return json.loads(text)
         except Exception:
@@ -33,20 +33,40 @@ class InferenceGuard:
         if match:
             return match.group(1).strip()
         return text
-        
+
     def run_structured_inference(self, prompt: str, schema: Type[T]) -> T | None:
-        """Run inference + validation with retry."""
+        """Run inference + validation with corrective retry."""
+
+        last_error: str | None = None
+        last_output: str | None = None
 
         for _ in range(self.max_retries):
-            output = self.llm.generate(prompt)
-            parsed = self.parse_json(self.strip_code_fences(output))
+            if last_error and last_output:
+                corrective_prompt = (
+                    f"{prompt}\n\n"
+                    f"### CORRECTION\n"
+                    f"Your previous output was invalid:\n"
+                    f"{last_output[:500]}\n\n"
+                    f"Error: {last_error}\n"
+                    f"Output ONLY a raw JSON object matching the schema. No other text."
+                )
+                output = self.llm.generate(corrective_prompt)
+            else:
+                output = self.llm.generate(prompt)
+
+            cleaned = self.strip_code_fences(output)
+            parsed = self.parse_json(cleaned)
 
             if parsed is None:
+                last_error = "Output is not valid JSON"
+                last_output = output
                 continue
 
             try:
                 return schema(**parsed)
-            except Exception:
+            except ValidationError as e:
+                last_error = str(e)
+                last_output = output
                 continue
 
         return None
