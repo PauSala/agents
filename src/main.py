@@ -7,17 +7,18 @@ from core.llm_wrapper import LLM
 from tools.python_tool import PythonCodeTool
 from tools.registry import ToolRegistry
 
-llm = LLM()
+fast_llm = LLM(model="deepseek-coder:6.7b")
+strong_llm = LLM(model="qwen2.5-coder:14b")
 log = LogCollector()
 
 # Build the registry — single source of truth for tools
 registry = ToolRegistry()
 python_tool = PythonCodeTool()
-python_agent = PythonAgent(llm, tool=python_tool, log=log)
+python_agent = PythonAgent(strong_llm, tool=python_tool, log=log)
 registry.register(python_tool, handler=python_agent.run)
 
-agent = DecisionAgent(llm, log=log)
-tool_agent = ToolSelectionAgent(llm, registry=registry, log=log)
+agent = DecisionAgent(fast_llm, log=log)
+tool_agent = ToolSelectionAgent(fast_llm, registry=registry, log=log)
 
 prompt = "Give me a list of 30 numbers alternating negative and positives, starting from 0"
 

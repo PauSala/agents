@@ -40,8 +40,8 @@ class InferenceGuard:
         for _ in range(self.max_retries):
             output = self.llm.generate(prompt, format=json_schema)
 
-            cleaned = self.strip_code_fences(output)
-            parsed = self.parse_json(cleaned)
+            # cleaned = self.strip_code_fences(output)
+            parsed = self.parse_json(output)
 
             if parsed is None:
                 continue
