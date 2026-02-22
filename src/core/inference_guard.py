@@ -8,11 +8,9 @@ from core.llm_wrapper import LLM
 
 T = TypeVar("T", bound=BaseModel)
 
+
 class TextResponse(BaseModel):
     response: str
-
-class InvalidResponse(BaseModel):
-    reason: str
 
 
 class InferenceGuard:
@@ -70,7 +68,7 @@ class InferenceGuard:
                 continue
 
         return None
-    
+
     def run_text_inference(self, prompt: str) -> TextResponse | None:
         """Run inference and wrap model output into {response: text}."""
 

@@ -2,7 +2,6 @@ from agents.decision_agent import DecisionAgent
 from agents.decision_response import DecisionType
 from agents.python_agent import PythonAgent
 from agents.tool_selection_agent import ToolSelectionAgent
-from core.inference_guard import InvalidResponse
 from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
 from tools.python_tool import PythonCodeTool
@@ -25,20 +24,22 @@ prompt = "Give me a list of 30 numbers alternating negative and positives, start
 # Step 1 — Intent classification
 decision = agent.run(prompt)
 
-if isinstance(decision, InvalidResponse):
-    print(f"Decision failed: {decision.reason}")
-elif decision.type == DecisionType.TOOL:
-    tool_selection = tool_agent.run(prompt)
+if not decision.ok or decision.value is None:
+    print(f"Decision failed: {decision.error}")
+elif decision.value.type == DecisionType.TOOL:
+    # Step 2 — Tool selection
+    selection = tool_agent.run(prompt)
 
-    if isinstance(tool_selection, InvalidResponse):
-        print(f"Tool selection failed: {tool_selection.reason}")
+    if not selection.ok or selection.value is None:
+        print(f"Tool selection failed: {selection.error}")
     else:
-        response = registry.execute(tool_selection)
+        # Step 3 — Tool execution
+        response = registry.execute(selection.value.tool_name, selection.value.prompt)
 
-        if isinstance(response, InvalidResponse):
-            print(f"Tool execution failed: {response.reason}")
+        if not response.ok:
+            print(f"Tool execution failed: {response.error}")
         else:
-            print(response)
+            print(response.value)
 else:
     print("Non-tool task — not yet implemented")
 

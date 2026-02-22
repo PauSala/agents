@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from core.inference_guard import InferenceGuard, InvalidResponse
+from core.inference_guard import InferenceGuard
 from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
+from core.types import Result
 from inspect import cleandoc
 
 T = TypeVar("T")
@@ -16,7 +17,7 @@ class BaseAgent(ABC, Generic[T]):
         self.log = log or LogCollector()
 
     @abstractmethod
-    def run(self, task: str) -> T | InvalidResponse:
+    def run(self, task: str) -> Result[T]:
         """Subclasses must implement this to provide their specific run."""
         pass
     

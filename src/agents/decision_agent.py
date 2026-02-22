@@ -1,21 +1,21 @@
 from agents.base_agent import BaseAgent
 from agents.decision_response import AgentDecision
-from core.inference_guard import InvalidResponse
+from core.types import Ok, Err, Result
 from inspect import cleandoc
 
 
 class DecisionAgent(BaseAgent[AgentDecision]):
-    def run(self, task: str) -> AgentDecision | InvalidResponse:
+    def run(self, task: str) -> Result[AgentDecision]:
         self.log.log("DecisionAgent", "start", task=task)
         prompt = self.build_prompt(task)
         parsed = self.guard.run_structured_inference(prompt, AgentDecision)
 
         if parsed is None:
             self.log.log("DecisionAgent", "failed", reason="Invalid JSON output after retries")
-            return InvalidResponse(reason="Invalid JSON output after retries")
+            return Err("Invalid JSON output after retries", stage="inference")
 
         self.log.log("DecisionAgent", "decision", type=parsed.type.value, reason=parsed.reason)
-        return parsed
+        return Ok(parsed)
     
 
     def build_prompt(self, task: str) -> str:

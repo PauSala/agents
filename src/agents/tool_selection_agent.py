@@ -1,9 +1,8 @@
-
 from agents.base_agent import BaseAgent
 from agents.types import ToolSelection
-from core.inference_guard import InvalidResponse
 from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
+from core.types import Ok, Err, Result
 from tools.registry import ToolRegistry, ToolSpec
 from inspect import cleandoc
 
@@ -14,7 +13,7 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
         super().__init__(llm, log)
         self.registry = registry
 
-    def run(self, task: str) -> ToolSelection | InvalidResponse:
+    def run(self, task: str) -> Result[ToolSelection]:
         """Execute task by selecting and running appropriate tool."""
         self.log.log("ToolSelectionAgent", "start", task=task)
         prompt = self.build_prompt(task)
@@ -22,10 +21,10 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
 
         if parsed is None:
             self.log.log("ToolSelectionAgent", "failed", reason="Failed to parse tool selection")
-            return InvalidResponse(reason="Failed to parse tool selection")
+            return Err("Failed to parse tool selection", stage="inference")
 
         self.log.log("ToolSelectionAgent", "selected", tool=parsed.tool_name, prompt=parsed.prompt)
-        return parsed
+        return Ok(parsed)
 
     def build_prompt(self, task: str) -> str:
         """Build prompt with available tools and task description."""

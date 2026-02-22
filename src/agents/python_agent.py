@@ -1,9 +1,9 @@
 from inspect import cleandoc
 from agents.base_agent import BaseAgent
 from agents.types import ToolCall
-from core.inference_guard import InvalidResponse
 from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
+from core.types import Ok, Err, Result
 from tools.python_tool import PythonCodeTool, PythonCodeOutput
 
 class PythonAgent(BaseAgent[PythonCodeOutput]):
@@ -20,11 +20,11 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             }
         """)
 
-    def run(self, task: str) -> PythonCodeOutput | InvalidResponse:
+    def run(self, task: str) -> Result[PythonCodeOutput]:
         self.log.log("PythonAgent", "start", task=task)
         previous_error: str | None = None
         failed_code = ""
-        result: PythonCodeOutput | None = None
+        last_result: PythonCodeOutput | None = None
 
         for attempt in range(self.max_retries + 1):
             if previous_error and failed_code:
@@ -37,30 +37,32 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
 
             if not parsed:
                 self.log.log("PythonAgent", "failed", reason="Failed to parse code execution request")
-                return InvalidResponse(reason="Failed to parse code execution request")
+                return Err("Failed to parse code execution request", stage="inference")
 
             code_attr = parsed.arguments.get("code")
             if not isinstance(code_attr, str):
                 self.log.log("PythonAgent", "failed", reason="LLM returned non-string code attribute")
-                return InvalidResponse(reason="LLM returned non-string code attribute")
+                return Err("LLM returned non-string code attribute", stage="validation")
 
             try:
                 input_data = self.python_tool.input_schema(code=code_attr)
-                result = self.python_tool.execute(input_data)
+                last_result = self.python_tool.execute(input_data)
             except Exception as e:
                 previous_error = str(e)
                 failed_code = code_attr
                 continue
 
-            if result.success:
-                self.log.log("PythonAgent", "success", output=result.output)
-                return result
+            if last_result.success:
+                self.log.log("PythonAgent", "success", output=last_result.output)
+                return Ok(last_result)
 
-            previous_error = result.error
+            previous_error = last_result.error
             failed_code = code_attr
 
         self.log.log("PythonAgent", "exhausted", attempts=self.max_retries + 1)
-        return result if result is not None else InvalidResponse(reason="Python tool failed after retries")
+        if last_result is not None:
+            return Err(f"Code execution failed after {self.max_retries + 1} attempts: {last_result.error}", stage="tool_execution")
+        return Err("Python tool failed after retries", stage="tool_execution")
 
     def build_fix_prompt(self, task: str, failed_code: str, error: str) -> str:
         output_constraints = self.json_output_instructions(self.code_schema)
