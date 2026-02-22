@@ -8,9 +8,6 @@ from fastapi import BackgroundTasks
 from server.types import ConnectionManager
 
 app = FastAPI()
-
-
-
 manager = ConnectionManager()
 director = Director(emitter=WebSocketEmitter(websocket_manager=manager))
 
@@ -21,8 +18,6 @@ class UserPrompt(BaseModel):
 
 
 # --- Endpoints ---
-
-
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """
