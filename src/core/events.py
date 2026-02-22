@@ -1,9 +1,8 @@
-
 from core.types import AgentEvent
 from server.server import ConnectionManager
 
 
-class UINotifier:
+class EventEmitter:
     def __init__(self, websocket_manager: ConnectionManager):
         self.manager = websocket_manager
 

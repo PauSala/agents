@@ -5,6 +5,7 @@ from core.types import AgentEvent
 
 app = FastAPI()
 
+
 # --- Connection Manager ---
 class ConnectionManager:
     def __init__(self):
@@ -22,13 +23,17 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_json(message.model_dump_json())
 
+
 manager = ConnectionManager()
+
 
 # --- Data Models ---
 class UserPrompt(BaseModel):
     prompt: str
 
+
 # --- Endpoints ---
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -43,6 +48,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+
 @app.post("/run")
 async def run_pipeline(data: UserPrompt):
     """
@@ -51,6 +57,8 @@ async def run_pipeline(data: UserPrompt):
 
     return {"status": "request_received"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

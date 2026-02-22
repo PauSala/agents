@@ -4,7 +4,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from core.events import UINotifier
+from core.events import EventEmitter
+from core.types import AgentEvent
 
 
 class LogEntry(BaseModel):
@@ -18,17 +19,34 @@ class LogEntry(BaseModel):
 class LogCollector:
     """Shared structured log collector for tracing agent decisions."""
 
-    def __init__(self, trace_id: str | None = None, emitter: UINotifier | None = None):
+    def __init__(self, trace_id: str | None = None, emitter: EventEmitter | None = None):
         self.trace_id = trace_id or uuid4().hex[:12]
         self.entries: list[LogEntry] = []
+        self.emitter = emitter
 
-    def log(self, agent: str, event: str, **data: Any) -> None:
-        self.entries.append(LogEntry(trace_id=self.trace_id, agent=agent, event=event, data=data))
+    def set_emitter(self, emitter: EventEmitter):
+        self.emitter = emitter
+
+    async def log(self, agent: str, event: str, **data: Any) -> None:
+        entry = LogEntry(trace_id=self.trace_id, agent=agent, event=event, data=data)
+        self.entries.append(entry)
+        if self.emitter is not None:
+            await self.emitter.notify(
+                AgentEvent(
+                    agent=entry.agent,
+                    status=entry.event,
+                    data=entry.data,
+                    timestamp=entry.timestamp,
+                )
+            )
 
     def summary(self) -> str:
         lines: list[str] = [f"trace: {self.trace_id}"]
         for entry in self.entries:
             ts = entry.timestamp.strftime("%H:%M:%S.%f")[:-3]
             data_str = ", ".join(f"{k}={v}" for k, v in entry.data.items())
-            lines.append(f"[{ts}] {entry.agent} :: {entry.event}" + (f" | {data_str}" if data_str else ""))
+            lines.append(
+                f"[{ts}] {entry.agent} :: {entry.event}"
+                + (f" | {data_str}" if data_str else "")
+            )
         return "\n".join(lines)

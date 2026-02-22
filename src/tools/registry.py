@@ -8,6 +8,7 @@ from tools.tool import Tool
 
 class ToolSpec(TypedDict):
     """Specification of a tool."""
+
     name: str
     description: str
     input_schema: dict[str, Any]

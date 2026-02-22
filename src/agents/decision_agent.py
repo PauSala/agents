@@ -12,12 +12,15 @@ class DecisionAgent(BaseAgent[AgentDecision]):
         parsed = self.guard.run_structured_inference(prompt, AgentDecision)
 
         if parsed is None:
-            self.log.log("DecisionAgent", "failed", reason="Invalid JSON output after retries")
+            self.log.log(
+                "DecisionAgent", "failed", reason="Invalid JSON output after retries"
+            )
             return Err("Invalid JSON output after retries", stage="inference")
 
-        self.log.log("DecisionAgent", "decision", type=parsed.type.value, reason=parsed.reason)
+        self.log.log(
+            "DecisionAgent", "decision", type=parsed.type.value, reason=parsed.reason
+        )
         return Ok(parsed)
-    
 
     def build_prompt(self, task: str) -> str:
         schema = cleandoc("""
@@ -64,5 +67,5 @@ class DecisionAgent(BaseAgent[AgentDecision]):
 
             {output_constraints}
         """)
-        
+
         return prompt

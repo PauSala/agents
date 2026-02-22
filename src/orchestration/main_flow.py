@@ -20,6 +20,7 @@ registry.register(python_tool, handler=python_agent.run)
 agent = DecisionAgent(fast_llm, log=log)
 tool_agent = ToolSelectionAgent(strong_llm, registry=registry, log=log)
 
+
 def run(prompt: str):
     decision = agent.run(prompt)
 
@@ -31,7 +32,9 @@ def run(prompt: str):
         if not selection.ok or selection.value is None:
             print(f"Tool selection failed: {selection.error}")
         else:
-            response = registry.execute(selection.value.tool_name, selection.value.prompt)
+            response = registry.execute(
+                selection.value.tool_name, selection.value.prompt
+            )
 
             if not response.ok:
                 print(f"Tool execution failed: {response.error}")

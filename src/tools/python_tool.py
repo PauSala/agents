@@ -43,7 +43,9 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
         tmp_filename = None
         process: subprocess.Popen[str] | None = None
         try:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as tmp_file:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".py", delete=False
+            ) as tmp_file:
                 tmp_file.write(code)
                 tmp_filename = tmp_file.name
 
@@ -52,19 +54,24 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
 
             process = subprocess.Popen(
                 [
-                    "docker", "run",
+                    "docker",
+                    "run",
                     "--rm",
-                    "--network", "none",
+                    "--network",
+                    "none",
                     "--read-only",
                     "--cap-drop=ALL",
                     "--security-opt=no-new-privileges",
-                    "--tmpfs", "/tmp:size=16m",
+                    "--tmpfs",
+                    "/tmp:size=16m",
                     f"--memory={self.MEMORY_LIMIT_MB}m",
                     "--cpus=1",
                     "--pids-limit=32",
-                    "-v", f"{tmp_filename}:/sandbox/script.py:ro",
+                    "-v",
+                    f"{tmp_filename}:/sandbox/script.py:ro",
                     SANDBOX_IMAGE,
-                    "python", "/sandbox/script.py",
+                    "python",
+                    "/sandbox/script.py",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -74,19 +81,25 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
             stdout, stderr = process.communicate(timeout=self.TIMEOUT_SECONDS)
 
             # Truncate to prevent host memory exhaustion
-            stdout = (stdout or "")[:self.MAX_OUTPUT_BYTES]
-            stderr = (stderr or "")[:self.MAX_OUTPUT_BYTES]
+            stdout = (stdout or "")[: self.MAX_OUTPUT_BYTES]
+            stderr = (stderr or "")[: self.MAX_OUTPUT_BYTES]
             success = process.returncode == 0
 
-            return PythonCodeOutput(output=stdout.strip(), error=stderr.strip(), success=success)
+            return PythonCodeOutput(
+                output=stdout.strip(), error=stderr.strip(), success=success
+            )
 
         except subprocess.TimeoutExpired:
             if process:
                 process.kill()
                 process.wait()
-            return PythonCodeOutput(output="", error="Execution timed out", success=False)
+            return PythonCodeOutput(
+                output="", error="Execution timed out", success=False
+            )
         except Exception as e:
-            return PythonCodeOutput(output="", error=f"Execution error: {e}", success=False)
+            return PythonCodeOutput(
+                output="", error=f"Execution error: {e}", success=False
+            )
         finally:
             if tmp_filename:
                 try:

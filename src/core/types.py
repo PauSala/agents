@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
@@ -33,4 +34,4 @@ class AgentEvent(BaseModel):
     agent: str
     status: str
     data: dict[str, Any]
-    timestamp: str
+    timestamp: datetime

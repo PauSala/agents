@@ -2,6 +2,4 @@
 
 from orchestration.main_flow import run
 
-__all__ = [
-    "run"
-]
+__all__ = ["run"]

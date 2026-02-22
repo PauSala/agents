@@ -9,11 +9,17 @@ from tools.python_tool import PythonCodeOutput, PythonCodeTool
 
 
 class PythonAgent(BaseAgent[PythonCodeOutput]):
-    def __init__(self, llm: LLM, tool: PythonCodeTool, max_retries: int = 6, log: LogCollector | None = None):
+    def __init__(
+        self,
+        llm: LLM,
+        tool: PythonCodeTool,
+        max_retries: int = 6,
+        log: LogCollector | None = None,
+    ):
         super().__init__(llm, log)
         self.python_tool = tool
         self.max_retries = max_retries
-        
+
         self.code_schema = cleandoc("""
             {
                 "arguments": {
@@ -30,7 +36,9 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
 
         for attempt in range(self.max_retries + 1):
             if previous_error and failed_code:
-                self.log.log("PythonAgent", "retry", attempt=attempt, error=previous_error)
+                self.log.log(
+                    "PythonAgent", "retry", attempt=attempt, error=previous_error
+                )
                 prompt = self.build_fix_prompt(task, failed_code, previous_error)
             else:
                 prompt = self.build_prompt(task)
@@ -38,12 +46,20 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             parsed = self.guard.run_structured_inference(prompt, ToolCall)
 
             if not parsed:
-                self.log.log("PythonAgent", "failed", reason="Failed to parse code execution request")
+                self.log.log(
+                    "PythonAgent",
+                    "failed",
+                    reason="Failed to parse code execution request",
+                )
                 return Err("Failed to parse code execution request", stage="inference")
 
             code_attr = parsed.arguments.get("code")
             if not isinstance(code_attr, str):
-                self.log.log("PythonAgent", "failed", reason="LLM returned non-string code attribute")
+                self.log.log(
+                    "PythonAgent",
+                    "failed",
+                    reason="LLM returned non-string code attribute",
+                )
                 return Err("LLM returned non-string code attribute", stage="validation")
 
             try:
@@ -63,7 +79,10 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
 
         self.log.log("PythonAgent", "exhausted", attempts=self.max_retries + 1)
         if last_result is not None:
-            return Err(f"Code execution failed after {self.max_retries + 1} attempts: {last_result.error}", stage="tool_execution")
+            return Err(
+                f"Code execution failed after {self.max_retries + 1} attempts: {last_result.error}",
+                stage="tool_execution",
+            )
         return Err("Python tool failed after retries", stage="tool_execution")
 
     def _sandbox_constraints(self) -> str:
@@ -76,7 +95,9 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         """)
 
     def build_fix_prompt(self, task: str, failed_code: str, error: str) -> str:
-        output_constraints = self.json_output_instructions(self.code_schema, allow_code_in_value=True)
+        output_constraints = self.json_output_instructions(
+            self.code_schema, allow_code_in_value=True
+        )
         sandbox = self._sandbox_constraints()
         return cleandoc(f"""
             Act as a Python Code Generator. The previous code failed. Analyze the error and fix it.
@@ -96,7 +117,9 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         """)
 
     def build_prompt(self, task: str) -> str:
-        output_constraints = self.json_output_instructions(self.code_schema, allow_code_in_value=True)
+        output_constraints = self.json_output_instructions(
+            self.code_schema, allow_code_in_value=True
+        )
         sandbox = self._sandbox_constraints()
         return cleandoc(f"""
             Act as a Python Code Generator.

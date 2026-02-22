@@ -20,13 +20,15 @@ class BaseAgent(ABC, Generic[T]):
     def run(self, task: str) -> Result[T]:
         """Subclasses must implement this to provide their specific run."""
         pass
-    
+
     @abstractmethod
     def build_prompt(self, task: str) -> str:
         """Subclasses must implement this to provide their specific prompt."""
         pass
 
-    def json_output_instructions(self, schema: str, allow_code_in_value: bool = False) -> str:
+    def json_output_instructions(
+        self, schema: str, allow_code_in_value: bool = False
+    ) -> str:
         """
         Generates the standardized Output Format and Constraints block
         with a custom JSON schema interpolated inside.
@@ -40,7 +42,10 @@ class BaseAgent(ABC, Generic[T]):
             "- NO conversational filler.",
         ]
         if not allow_code_in_value:
-            constraints.insert(0, "- NO code snippets or logic (e.g., no 'for loops', 'imports', or 'functions').")
+            constraints.insert(
+                0,
+                "- NO code snippets or logic (e.g., no 'for loops', 'imports', or 'functions').",
+            )
 
         constraints_block = "\n".join(constraints)
 

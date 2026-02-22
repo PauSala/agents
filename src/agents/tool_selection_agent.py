@@ -11,7 +11,9 @@ from tools.registry import ToolRegistry, ToolSpec
 class ToolSelectionAgent(BaseAgent[ToolSelection]):
     """Agent that selects tools based on task description."""
 
-    def __init__(self, llm: LLM, registry: ToolRegistry, log: LogCollector | None = None):
+    def __init__(
+        self, llm: LLM, registry: ToolRegistry, log: LogCollector | None = None
+    ):
         super().__init__(llm, log)
         self.registry = registry
 
@@ -22,10 +24,17 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
         parsed = self.guard.run_structured_inference(prompt, ToolSelection)
 
         if parsed is None:
-            self.log.log("ToolSelectionAgent", "failed", reason="Failed to parse tool selection")
+            self.log.log(
+                "ToolSelectionAgent", "failed", reason="Failed to parse tool selection"
+            )
             return Err("Failed to parse tool selection", stage="inference")
 
-        self.log.log("ToolSelectionAgent", "selected", tool=parsed.tool_name, prompt=parsed.prompt)
+        self.log.log(
+            "ToolSelectionAgent",
+            "selected",
+            tool=parsed.tool_name,
+            prompt=parsed.prompt,
+        )
         return Ok(parsed)
 
     def build_prompt(self, task: str) -> str:
@@ -38,7 +47,7 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
             }
         """)
         output_constraints = self.json_output_instructions(schema)
-        
+
         return cleandoc(f"""
             Act as a precise Router Agent. Your sole purpose is to map a User Request to the correct Tool Name and provide a clean, high-level intent string.
     
@@ -55,13 +64,12 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
     
             {output_constraints}
         """)
-    
+
     def _format_tools_info(self) -> str:
         """Return minimal tool registry representation for prompt routing."""
-    
+
         specs: list[ToolSpec] = self.registry.get_tool_specs()
-    
+
         return "\n".join(
-            f"- {spec['name']}: {spec.get('description', '')}"
-            for spec in specs
+            f"- {spec['name']}: {spec.get('description', '')}" for spec in specs
         )
