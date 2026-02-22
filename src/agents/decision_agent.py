@@ -7,18 +7,18 @@ from core.types import Err, Ok, Result
 
 class DecisionAgent(BaseAgent[AgentDecision]):
     def run(self, task: str, caller_id: str = "") -> Result[AgentDecision]:
-        self.log.log(self.id, "start", caller=caller_id, task=task)
+        self.log.log(self.name, "start", agent_id=self.agent_id, caller_id=caller_id, task=task)
         prompt = self.build_prompt(task)
         parsed = self.guard.run_structured_inference(prompt, AgentDecision)
 
         if parsed is None:
             self.log.log(
-                self.id, "failed", caller=caller_id, reason="Invalid JSON output after retries"
+                self.name, "failed", agent_id=self.agent_id, caller_id=caller_id, reason="Invalid JSON output after retries"
             )
             return Err("Invalid JSON output after retries", stage="inference")
 
         self.log.log(
-            self.id, "decision", caller=caller_id, type=parsed.type.value, reason=parsed.reason
+            self.name, "decision", agent_id=self.agent_id, caller_id=caller_id, type=parsed.type.value, reason=parsed.reason
         )
         return Ok(parsed)
 

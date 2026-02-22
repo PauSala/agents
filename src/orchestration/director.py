@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from agents.decision_agent import DecisionAgent
 from agents.decision_response import DecisionType
 from agents.python_agent import PythonAgent
@@ -10,9 +12,11 @@ from tools.registry import ToolRegistry
 
 
 class Director:
-    ID = "director"
+    NAME = "director"
 
     def __init__(self, emitter: EventEmitter):
+        self.agent_id = uuid4().hex
+
         # Core infrastructure
         self.log = LogCollector(emitter)
 
@@ -26,7 +30,7 @@ class Director:
         # Tools + agents
         self.python_tool = PythonCodeTool()
         self.python_agent = PythonAgent(
-            id="python_agent",
+            name="python_agent",
             llm=self.strong_llm,
             tool=self.python_tool,
             log=self.log,
@@ -38,39 +42,39 @@ class Director:
         )
 
         self.decision_agent = DecisionAgent(
-            id="decision_agent",
+            name="decision_agent",
             llm=self.fast_llm,
             log=self.log,
         )
 
         self.tool_selection_agent = ToolSelectionAgent(
-            id="tool_selection_agent",
+            name="tool_selection_agent",
             llm=self.strong_llm,
             registry=self.registry,
             log=self.log,
         )
 
     def run(self, prompt: str) -> None:
-        self.log.log(self.ID, "start", task=prompt)
-        decision = self.decision_agent.run(prompt, caller_id=self.ID)
+        self.log.log(self.NAME, "start", agent_id=self.agent_id, task=prompt)
+        decision = self.decision_agent.run(prompt, caller_id=self.agent_id)
 
         if not decision.ok or decision.value is None:
             print(f"Decision failed: {decision.error}")
-            self.log.log(self.ID, "end")
+            self.log.log(self.NAME, "end", agent_id=self.agent_id)
             return
 
         if decision.value.type == DecisionType.TOOL:
-            selection = self.tool_selection_agent.run(prompt, caller_id=self.ID)
+            selection = self.tool_selection_agent.run(prompt, caller_id=self.agent_id)
 
             if not selection.ok or selection.value is None:
                 print(f"Tool selection failed: {selection.error}")
-                self.log.log(self.ID, "end")
+                self.log.log(self.NAME, "end", agent_id=self.agent_id)
                 return
 
             response = self.registry.execute(
                 selection.value.tool_name,
                 selection.value.prompt,
-                caller_id=self.ID,
+                caller_id=self.agent_id,
             )
 
             if not response.ok:
@@ -81,6 +85,6 @@ class Director:
         else:
             print("Non-tool task — not yet implemented")
 
-        self.log.log(self.ID, "end")
+        self.log.log(self.NAME, "end", agent_id=self.agent_id)
         print("\n--- Agent Log ---")
         print(self.log.summary())

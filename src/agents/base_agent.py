@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from inspect import cleandoc
 from typing import Generic, TypeVar
+from uuid import uuid4
 
 from core.events import NoOpEmitter
 from core.inference_guard import InferenceGuard
@@ -12,8 +13,9 @@ T = TypeVar("T")
 
 
 class BaseAgent(ABC, Generic[T]):
-    def __init__(self, id: str, llm: LLM, log: LogCollector | None = None):
-        self.id = id
+    def __init__(self, name: str, llm: LLM, log: LogCollector | None = None):
+        self.name = name
+        self.agent_id = uuid4().hex
         self.llm = llm
         self.guard = InferenceGuard(llm)
         self.log = log or LogCollector(NoOpEmitter())
