@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useSocket } from "@/hooks/useSocket";
 import { StatusHeader } from "@/components/StatusHeader";
 import { EventItem } from "@/components/EventItem";
+import AgentGraph from "./AgentGraph";
 
-export default function Home() {
+export default function Pipeline() {
   const { events, setEvents, status, isWorking, setIsWorking } = useSocket(
     "ws://localhost:8000/ws",
   );
@@ -36,7 +37,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex w-full max-w-3xl flex-col gap-6 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+    <div className="flex w-full max-w-3xl flex-col gap-6 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
       <StatusHeader status={status} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -62,9 +63,9 @@ export default function Home() {
       </form>
 
       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-        {events.map(
-          (ev, i) => ev.agent !== "END" && <EventItem key={i} event={ev} />,
-        )}
+        {events.map((ev, i) => (
+          <EventItem key={i} event={ev} />
+        ))}
 
         {isWorking && (
           <div className="flex flex-col items-center justify-center py-12 text-zinc-400">
@@ -77,6 +78,8 @@ export default function Home() {
           </div>
         )}
       </div>
-    </main>
+
+      <AgentGraph events={events} />
+    </div>
   );
 }

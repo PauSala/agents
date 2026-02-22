@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 
 export interface AgentEvent {
-  agent?: string;
-  status?: string;
-  data?: Record<string, string>;
-  timestamp?: string;
+  agent: string;
+  status: string;
+  data: Record<string, string>;
+  agent_id: string;
+  caller_id: string;
+  timestamp: string;
 }
 
 export function useSocket(url: string) {
