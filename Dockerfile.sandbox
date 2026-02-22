@@ -1,0 +1,7 @@
+FROM python:3.13-slim
+
+RUN pip install --no-cache-dir numpy pandas scipy sympy matplotlib
+
+RUN useradd -m -s /bin/sh sandbox
+USER sandbox
+WORKDIR /sandbox

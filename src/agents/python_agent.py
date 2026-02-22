@@ -15,7 +15,7 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         self.code_schema = cleandoc("""
             {
                 "arguments": {
-                    "code": "A string containing valid, PEP8 compliant Python code. Use standard newline characters (\\n)."
+                    "code": "A string containing valid Python code. Use \\n for newlines."
                 }
             }
         """)
@@ -64,10 +64,20 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             return Err(f"Code execution failed after {self.max_retries + 1} attempts: {last_result.error}", stage="tool_execution")
         return Err("Python tool failed after retries", stage="tool_execution")
 
+    def _sandbox_constraints(self) -> str:
+        return cleandoc("""
+            ### SANDBOX CONSTRAINTS
+            - Available libraries: Python standard library, numpy, pandas, scipy, sympy, matplotlib.
+            - Do NOT use any other third-party packages.
+            - Do NOT access the filesystem (no reading/writing files).
+            - The code MUST include a print() statement for the final result.
+        """)
+
     def build_fix_prompt(self, task: str, failed_code: str, error: str) -> str:
-        output_constraints = self.json_output_instructions(self.code_schema)
+        output_constraints = self.json_output_instructions(self.code_schema, allow_code_in_value=True)
+        sandbox = self._sandbox_constraints()
         return cleandoc(f"""
-            The previous Python code you generated failed. Fix it.
+            Act as a Python Code Generator. The previous code failed. Analyze the error and fix it.
 
             ### ORIGINAL TASK
             {task}
@@ -78,18 +88,22 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             ### ERROR MESSAGE
             {error}
 
+            {sandbox}
+
             {output_constraints}
         """)
 
     def build_prompt(self, task: str) -> str:
-        output_constraints = self.json_output_instructions(self.code_schema)
+        output_constraints = self.json_output_instructions(self.code_schema, allow_code_in_value=True)
+        sandbox = self._sandbox_constraints()
         return cleandoc(f"""
-            Act as a deterministic Python Code Generator.
+            Act as a Python Code Generator.
 
             ### TASK
             Generate a Python script that executes the following task and prints the final result:
             {task}
 
+            {sandbox}
+
             {output_constraints}
-            - The Python code MUST include a print() statement for the final result.
         """)

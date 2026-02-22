@@ -1,15 +1,15 @@
-"""Tool that executes Python code in a sandboxed subprocess with resource limits."""
+"""Tool that executes Python code in a Docker sandbox."""
 
 import subprocess
 import tempfile
 import os
-import sys
-import resource
 from typing import Optional
 
 from pydantic import BaseModel
 
 from tools.tool import Tool
+
+SANDBOX_IMAGE = "agents-sandbox"
 
 
 class PythonCodeInput(BaseModel):
@@ -23,40 +23,16 @@ class PythonCodeOutput(BaseModel):
 
 
 class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
-    """Execute isolated Python code in a sandboxed subprocess."""
+    """Execute Python code in an isolated Docker container."""
 
     name = "python"
-    description = "Execute isolated Python code in a sandboxed subprocess."
+    description = "Execute isolated Python code in a sandboxed Docker container."
     input_schema = PythonCodeInput
 
     MAX_CODE_LENGTH = 5000
-    TIMEOUT_SECONDS = 3
+    MAX_OUTPUT_BYTES = 64 * 1024  # 64KB
+    TIMEOUT_SECONDS = 10
     MEMORY_LIMIT_MB = 128
-    CPU_TIME_LIMIT_SECONDS = 2
-
-    def _limit_resources(self):
-        """Apply resource limits (Unix-like systems including macOS and Linux)."""
-        # Limit CPU time
-        try:
-            if hasattr(resource, "RLIMIT_CPU"):
-                resource.setrlimit(
-                    resource.RLIMIT_CPU,
-                    (self.CPU_TIME_LIMIT_SECONDS, self.CPU_TIME_LIMIT_SECONDS),
-                )
-        except Exception as e:
-            print(f"[resource-limit-error][RLIMIT_CPU] {e}", file=sys.stderr)
-
-        # Limit memory usage (may not be supported on all platforms)
-        try:
-            if hasattr(resource, "RLIMIT_AS"):
-                memory_bytes = self.MEMORY_LIMIT_MB * 1024 * 1024
-                resource.setrlimit(
-                    resource.RLIMIT_AS,
-                    (memory_bytes, memory_bytes),
-                )
-        except Exception as e:
-            # macOS may not support strict RLIMIT_AS enforcement
-            pass
 
     def execute(self, input_data: PythonCodeInput) -> PythonCodeOutput:
         code = input_data.code.strip()
@@ -65,26 +41,49 @@ class PythonCodeTool(Tool[PythonCodeInput, PythonCodeOutput]):
             return PythonCodeOutput(output="", error="Code too long", success=False)
 
         tmp_filename = None
+        process: subprocess.Popen[str] | None = None
         try:
             with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as tmp_file:
                 tmp_file.write(code)
                 tmp_filename = tmp_file.name
 
-            process = subprocess.run(
-                [sys.executable, tmp_filename],
-                capture_output=True,
+            # Make readable by Docker's sandbox user (uid 1000)
+            os.chmod(tmp_filename, 0o644)
+
+            process = subprocess.Popen(
+                [
+                    "docker", "run",
+                    "--rm",
+                    "--network", "none",
+                    "--read-only",
+                    "--cap-drop=ALL",
+                    "--security-opt=no-new-privileges",
+                    "--tmpfs", "/tmp:size=16m",
+                    f"--memory={self.MEMORY_LIMIT_MB}m",
+                    "--cpus=1",
+                    "--pids-limit=32",
+                    "-v", f"{tmp_filename}:/sandbox/script.py:ro",
+                    SANDBOX_IMAGE,
+                    "python", "/sandbox/script.py",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=self.TIMEOUT_SECONDS,
-                preexec_fn=self._limit_resources if os.name != "nt" else None,
             )
 
-            stdout = process.stdout or ""
-            stderr = process.stderr or ""
+            stdout, stderr = process.communicate(timeout=self.TIMEOUT_SECONDS)
+
+            # Truncate to prevent host memory exhaustion
+            stdout = (stdout or "")[:self.MAX_OUTPUT_BYTES]
+            stderr = (stderr or "")[:self.MAX_OUTPUT_BYTES]
             success = process.returncode == 0
 
             return PythonCodeOutput(output=stdout.strip(), error=stderr.strip(), success=success)
 
         except subprocess.TimeoutExpired:
+            if process:
+                process.kill()
+                process.wait()
             return PythonCodeOutput(output="", error="Execution timed out", success=False)
         except Exception as e:
             return PythonCodeOutput(output="", error=f"Execution error: {e}", success=False)

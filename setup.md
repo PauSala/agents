@@ -17,3 +17,10 @@ Ollama is an LLM manager. You can download/train/serve models with it.
     ```
 - List models: ollama list
 - Models are stored in: ~/.ollama/models
+
+## Docker Sandbox
+
+The Python tool runs LLM-generated code inside a Docker container for isolation.
+
+- Build the sandbox image (one-time): `docker build -f Dockerfile.sandbox -t agents-sandbox .`
+- The container runs with: no network, read-only filesystem, 128MB memory limit, PID limit

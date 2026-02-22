@@ -29,28 +29,35 @@ class DecisionAgent(BaseAgent[AgentDecision]):
         output_constraints = self.json_output_instructions(schema)
         prompt = cleandoc(f"""
             You are a workflow decision classifier.
+            Classify the TASK into exactly one of: explain | tool | code | fail.
 
-            You must classify the given TASK into one of:
-            explain | tool | code | fail.
+            ### CLASSIFICATION RULES (read these BEFORE looking at the task):
 
-            TASK:
-            {task}
+            - tool:
+              The task requires executing an action to produce a result: computation, math,
+              file operations, API calls, data processing, or anything that needs running code.
+              When in doubt between "tool" and "code", choose "tool".
+
+            - code:
+              The user explicitly asks you to write or generate source code as the deliverable
+              (e.g. "write a function that…", "give me a class for…").
+
+            - explain:
+              The task only requires explanation, reasoning, or knowledge — no execution needed.
+
+            - fail:
+              The task is nonsensical, empty, or fundamentally impossible to act on.
+
+            ### EXAMPLES
+            Task: "Solve x^2 + 3x + 1 = 0" → {{"type": "tool", "reason": "Requires computation to find the roots"}}
+            Task: "Write a Python function to sort a list" → {{"type": "code", "reason": "User asks to generate source code"}}
+            Task: "What is the capital of France?" → {{"type": "explain", "reason": "Factual question requiring only explanation"}}
+            Task: "asdfghjkl" → {{"type": "fail", "reason": "Nonsensical input, cannot determine intent"}}
 
             ----
 
-            ### CLASSIFICATION RULES:
-
-            - explain:
-              Use when the task requires explanation or reasoning.
-            
-            - tool:
-              Use when the task requires performing an action that could require a tool (APIs, FS, Math).
-
-            - code:
-              Use when asked to generate code.
-
-            - fail:
-              Use only when the task is impossible to be resolved by a tool.
+            ### TASK (classify this):
+            {task}
 
             ----
 

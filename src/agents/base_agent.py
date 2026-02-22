@@ -26,19 +26,29 @@ class BaseAgent(ABC, Generic[T]):
         """Subclasses must implement this to provide their specific prompt."""
         pass
 
-    def json_output_instructions(self, schema: str) -> str:
+    def json_output_instructions(self, schema: str, allow_code_in_value: bool = False) -> str:
         """
         Generates the standardized Output Format and Constraints block
         with a custom JSON schema interpolated inside.
+
+        When allow_code_in_value is True, the "no code snippets" constraint
+        is omitted so the model can embed code inside JSON string values.
         """
+        constraints = [
+            "- NO formatting symbols or backticks.",
+            "- NO mentions of tool metadata or documentation.",
+            "- NO conversational filler.",
+        ]
+        if not allow_code_in_value:
+            constraints.insert(0, "- NO code snippets or logic (e.g., no 'for loops', 'imports', or 'functions').")
+
+        constraints_block = "\n".join(constraints)
+
         return cleandoc(f"""
             ### OUTPUT FORMAT
             Output ONLY a raw JSON object. No markdown blocks, no conversational text, and no quotes outside the JSON.
             {schema}
     
             ### STRICT NEGATIVE CONSTRAINTS
-            - NO code snippets or logic (e.g., no 'for loops', 'imports', or 'functions').
-            - NO formatting symbols or backticks.
-            - NO mentions of tool metadata or documentation.
-            - NO conversational filler.
+            {constraints_block}
         """)
