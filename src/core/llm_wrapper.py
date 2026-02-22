@@ -1,4 +1,5 @@
 import requests
+from typing import Any
 
 
 class LLM:
@@ -12,14 +13,17 @@ class LLM:
         self.base_url = base_url
         self.timeout = timeout
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, format: dict[str, Any] | None = None) -> str:
         url = f"{self.base_url}/api/generate"
 
-        payload: dict[str, str | bool] = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
         }
+
+        if format is not None:
+            payload["format"] = format
 
         response = requests.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()

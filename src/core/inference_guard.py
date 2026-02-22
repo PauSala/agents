@@ -33,38 +33,22 @@ class InferenceGuard:
         return text
 
     def run_structured_inference(self, prompt: str, schema: Type[T]) -> T | None:
-        """Run inference + validation with corrective retry."""
+        """Run inference with Ollama structured output, with corrective retry as fallback."""
 
-        last_error: str | None = None
-        last_output: str | None = None
+        json_schema = schema.model_json_schema()
 
         for _ in range(self.max_retries):
-            if last_error and last_output:
-                corrective_prompt = (
-                    f"{prompt}\n\n"
-                    f"### CORRECTION\n"
-                    f"Your previous output was invalid:\n"
-                    f"{last_output[:500]}\n\n"
-                    f"Error: {last_error}\n"
-                    f"Output ONLY a raw JSON object matching the schema. No other text."
-                )
-                output = self.llm.generate(corrective_prompt)
-            else:
-                output = self.llm.generate(prompt)
+            output = self.llm.generate(prompt, format=json_schema)
 
             cleaned = self.strip_code_fences(output)
             parsed = self.parse_json(cleaned)
 
             if parsed is None:
-                last_error = "Output is not valid JSON"
-                last_output = output
                 continue
 
             try:
                 return schema(**parsed)
-            except ValidationError as e:
-                last_error = str(e)
-                last_output = output
+            except ValidationError:
                 continue
 
         return None
