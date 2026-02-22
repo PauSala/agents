@@ -13,6 +13,11 @@ import {
   Edge,
 } from "@xyflow/react";
 import { useEffect } from "react";
+import { AgentNode } from "./AgentNode";
+
+const nodeTypes = {
+  agent: AgentNode,
+};
 
 export default function AgentGraph({ events }: { events: AgentEvent[] }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -31,8 +36,10 @@ export default function AgentGraph({ events }: { events: AgentEvent[] }) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
         fitView
         colorMode="dark"
+        fitViewOptions={{ padding: 2.0 }}
       >
         <Background gap={20} color="#27272a" />
         <Controls />

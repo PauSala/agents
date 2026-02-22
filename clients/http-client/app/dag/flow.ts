@@ -1,4 +1,4 @@
-import { Node, Edge, Position } from "@xyflow/react";
+import { Node, Edge } from "@xyflow/react";
 import { AgentEvent } from "@/hooks/useSocket";
 import { AgentNode, buildDag } from "./dag";
 
@@ -37,20 +37,13 @@ export function transformDagToFlow(events: AgentEvent[]) {
 
         nodes.push({
             id: node.agent_id,
+            type: 'agent',
             data: {
                 label: node.agent.replace(/([a-z])([A-Z])/g, "$1 $2"),
                 status: node.status,
+                color: color
             },
             position: { x: xIndex * xSpacing, y },
-            sourcePosition: Position.Right,
-            targetPosition: Position.Left,
-            style: {
-                background: "#18181b",
-                color: "#adabab",
-                border: `2px solid ${color}`,
-                borderRadius: "8px",
-                width: nodeWidth,
-            },
         });
 
         xIndex++;

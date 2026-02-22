@@ -63,7 +63,7 @@ export default function Pipeline() {
       </form>
       <AgentGraph events={events} />
 
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+      <div className="space-y-4 pr-2">
         {events.map((ev, i) => (
           <EventItem key={i} event={ev} />
         ))}
