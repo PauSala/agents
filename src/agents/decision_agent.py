@@ -20,13 +20,6 @@ class DecisionAgent(BaseAgent[AgentDecision]):
         self.log.log(
             self.name, AgentStatus.SUCCESS.value, agent_id=self.agent_id, caller_id=caller_id, type=parsed.type.value, reason=parsed.reason
         )
-
-        self.log.log(
-            "FakeAgentOne", AgentStatus.FAILED.value, agent_id="110294870984", caller_id=self.agent_id, type=parsed.type.value, reason=parsed.reason
-        )
-        self.log.log(
-            "FakeAgentTwo", AgentStatus.FAILED.value, agent_id="110294870987", caller_id=self.agent_id, type=parsed.type.value, reason=parsed.reason
-        )
         return Ok(parsed)
 
     def build_prompt(self, task: str) -> str:
