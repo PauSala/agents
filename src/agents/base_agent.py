@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from inspect import cleandoc
 from typing import Generic, TypeVar
 
+from core.events import NoOpEmitter
 from core.inference_guard import InferenceGuard
 from core.llm_wrapper import LLM
 from core.log_collector import LogCollector
@@ -11,13 +12,14 @@ T = TypeVar("T")
 
 
 class BaseAgent(ABC, Generic[T]):
-    def __init__(self, llm: LLM, log: LogCollector | None = None):
+    def __init__(self, id: str, llm: LLM, log: LogCollector | None = None):
+        self.id = id
         self.llm = llm
         self.guard = InferenceGuard(llm)
-        self.log = log or LogCollector()
+        self.log = log or LogCollector(NoOpEmitter())
 
     @abstractmethod
-    def run(self, task: str) -> Result[T]:
+    def run(self, task: str, caller_id: str = "") -> Result[T]:
         """Subclasses must implement this to provide their specific run."""
         pass
 

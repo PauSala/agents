@@ -11,6 +11,7 @@ class LogEntry(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     trace_id: str
     agent: str
+    caller: str
     event: str
     data: dict[str, Any] = Field(default_factory=dict)
 
@@ -23,12 +24,13 @@ class LogCollector:
         self.entries: list[LogEntry] = []
         self.emitter = emitter
 
-    def log(self, agent: str, event: str, **data: Any) -> None:
-        entry = LogEntry(trace_id=self.trace_id, agent=agent, event=event, data=data)
+    def log(self, agent: str, event: str, caller: str = "", **data: Any) -> None:
+        entry = LogEntry(trace_id=self.trace_id, agent=agent, caller=caller, event=event, data=data)
         self.entries.append(entry)
         self.emitter.notify(
             AgentEvent(
                 agent=entry.agent,
+                caller=entry.caller,
                 status=entry.event,
                 data=entry.data,
                 timestamp=entry.timestamp,
@@ -40,8 +42,9 @@ class LogCollector:
         for entry in self.entries:
             ts = entry.timestamp.strftime("%H:%M:%S.%f")[:-3]
             data_str = ", ".join(f"{k}={v}" for k, v in entry.data.items())
+            caller_str = f" (caller: {entry.caller})" if entry.caller else ""
             lines.append(
-                f"[{ts}] {entry.agent} :: {entry.event}"
+                f"[{ts}] {entry.agent}{caller_str} :: {entry.event}"
                 + (f" | {data_str}" if data_str else "")
             )
         return "\n".join(lines)

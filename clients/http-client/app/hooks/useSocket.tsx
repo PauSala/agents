@@ -26,7 +26,7 @@ export function useSocket(url: string) {
           typeof rawData === "string" ? JSON.parse(rawData) : rawData;
 
         console.log(data);
-        if (data.status === "END") {
+        if (data.status === "end") {
           setIsWorking(false);
         }
         setEvents((prev) => [

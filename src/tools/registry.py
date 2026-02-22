@@ -19,9 +19,9 @@ class ToolRegistry:
 
     def __init__(self):
         self._tools: dict[str, Tool[Any, Any]] = {}
-        self._handlers: dict[str, Callable[[str], Any]] = {}
+        self._handlers: dict[str, Callable[..., Any]] = {}
 
-    def register(self, tool: Tool[Any, Any], handler: Callable[[str], Any]) -> None:
+    def register(self, tool: Tool[Any, Any], handler: Callable[..., Any]) -> None:
         """Register a tool and its execution handler.
 
         Args:
@@ -35,12 +35,12 @@ class ToolRegistry:
         """Get a tool instance by name."""
         return self._tools.get(name)
 
-    def execute(self, tool_name: str, prompt: str) -> Result[Any]:
+    def execute(self, tool_name: str, prompt: str, caller_id: str = "") -> Result[Any]:
         """Execute a tool by routing to its registered handler."""
         handler = self._handlers.get(tool_name)
         if not handler:
             return Err(f"No handler registered for tool '{tool_name}'", stage="routing")
-        return handler(prompt)
+        return handler(prompt, caller_id)
 
     def list_tools(self) -> list[str]:
         """Get list of all registered tool names."""

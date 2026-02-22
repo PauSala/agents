@@ -12,26 +12,27 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
     """Agent that selects tools based on task description."""
 
     def __init__(
-        self, llm: LLM, registry: ToolRegistry, log: LogCollector | None = None
+        self, id: str, llm: LLM, registry: ToolRegistry, log: LogCollector | None = None
     ):
-        super().__init__(llm, log)
+        super().__init__(id, llm, log)
         self.registry = registry
 
-    def run(self, task: str) -> Result[ToolSelection]:
+    def run(self, task: str, caller_id: str = "") -> Result[ToolSelection]:
         """Execute task by selecting and running appropriate tool."""
-        self.log.log("ToolSelectionAgent", "start", task=task)
+        self.log.log(self.id, "start", caller=caller_id, task=task)
         prompt = self.build_prompt(task)
         parsed = self.guard.run_structured_inference(prompt, ToolSelection)
 
         if parsed is None:
             self.log.log(
-                "ToolSelectionAgent", "failed", reason="Failed to parse tool selection"
+                self.id, "failed", caller=caller_id, reason="Failed to parse tool selection"
             )
             return Err("Failed to parse tool selection", stage="inference")
 
         self.log.log(
-            "ToolSelectionAgent",
+            self.id,
             "selected",
+            caller=caller_id,
             tool=parsed.tool_name,
             prompt=parsed.prompt,
         )

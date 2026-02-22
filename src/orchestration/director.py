@@ -10,6 +10,8 @@ from tools.registry import ToolRegistry
 
 
 class Director:
+    ID = "director"
+
     def __init__(self, emitter: EventEmitter):
         # Core infrastructure
         self.log = LogCollector(emitter)
@@ -24,7 +26,8 @@ class Director:
         # Tools + agents
         self.python_tool = PythonCodeTool()
         self.python_agent = PythonAgent(
-            self.strong_llm,
+            id="python_agent",
+            llm=self.strong_llm,
             tool=self.python_tool,
             log=self.log,
         )
@@ -35,35 +38,39 @@ class Director:
         )
 
         self.decision_agent = DecisionAgent(
-            self.fast_llm,
+            id="decision_agent",
+            llm=self.fast_llm,
             log=self.log,
         )
 
         self.tool_selection_agent = ToolSelectionAgent(
-            self.strong_llm,
+            id="tool_selection_agent",
+            llm=self.strong_llm,
             registry=self.registry,
             log=self.log,
         )
 
     def run(self, prompt: str) -> None:
-        decision = self.decision_agent.run(prompt)
+        self.log.log(self.ID, "start", task=prompt)
+        decision = self.decision_agent.run(prompt, caller_id=self.ID)
 
         if not decision.ok or decision.value is None:
             print(f"Decision failed: {decision.error}")
-            self.log.log(agent="", event="END", data={})
+            self.log.log(self.ID, "end")
             return
 
         if decision.value.type == DecisionType.TOOL:
-            selection = self.tool_selection_agent.run(prompt)
+            selection = self.tool_selection_agent.run(prompt, caller_id=self.ID)
 
             if not selection.ok or selection.value is None:
                 print(f"Tool selection failed: {selection.error}")
-                self.log.log(agent="", event="END", data={})
+                self.log.log(self.ID, "end")
                 return
 
             response = self.registry.execute(
                 selection.value.tool_name,
                 selection.value.prompt,
+                caller_id=self.ID,
             )
 
             if not response.ok:
@@ -74,6 +81,6 @@ class Director:
         else:
             print("Non-tool task — not yet implemented")
 
-        self.log.log(agent="", event="END", data={})
+        self.log.log(self.ID, "end")
         print("\n--- Agent Log ---")
         print(self.log.summary())

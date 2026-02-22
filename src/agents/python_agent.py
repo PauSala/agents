@@ -11,12 +11,13 @@ from tools.python_tool import PythonCodeOutput, PythonCodeTool
 class PythonAgent(BaseAgent[PythonCodeOutput]):
     def __init__(
         self,
+        id: str,
         llm: LLM,
         tool: PythonCodeTool,
         max_retries: int = 6,
         log: LogCollector | None = None,
     ):
-        super().__init__(llm, log)
+        super().__init__(id, llm, log)
         self.python_tool = tool
         self.max_retries = max_retries
 
@@ -28,8 +29,8 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             }
         """)
 
-    def run(self, task: str) -> Result[PythonCodeOutput]:
-        self.log.log("PythonAgent", "start", task=task)
+    def run(self, task: str, caller_id: str = "") -> Result[PythonCodeOutput]:
+        self.log.log(self.id, "start", caller=caller_id, task=task)
         previous_error: str | None = None
         failed_code = ""
         last_result: PythonCodeOutput | None = None
@@ -37,7 +38,7 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         for attempt in range(self.max_retries + 1):
             if previous_error and failed_code:
                 self.log.log(
-                    "PythonAgent", "retry", attempt=attempt, error=previous_error
+                    self.id, "retry", caller=caller_id, attempt=attempt, error=previous_error
                 )
                 prompt = self.build_fix_prompt(task, failed_code, previous_error)
             else:
@@ -47,8 +48,9 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
 
             if not parsed:
                 self.log.log(
-                    "PythonAgent",
+                    self.id,
                     "failed",
+                    caller=caller_id,
                     reason="Failed to parse code execution request",
                 )
                 return Err("Failed to parse code execution request", stage="inference")
@@ -56,8 +58,9 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             code_attr = parsed.arguments.get("code")
             if not isinstance(code_attr, str):
                 self.log.log(
-                    "PythonAgent",
+                    self.id,
                     "failed",
+                    caller=caller_id,
                     reason="LLM returned non-string code attribute",
                 )
                 return Err("LLM returned non-string code attribute", stage="validation")
@@ -71,13 +74,13 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
                 continue
 
             if last_result.success:
-                self.log.log("PythonAgent", "success", output=last_result.output)
+                self.log.log(self.id, "success", caller=caller_id, output=last_result.output)
                 return Ok(last_result)
 
             previous_error = last_result.error
             failed_code = code_attr
 
-        self.log.log("PythonAgent", "exhausted", attempts=self.max_retries + 1)
+        self.log.log(self.id, "exhausted", caller=caller_id, attempts=self.max_retries + 1)
         if last_result is not None:
             return Err(
                 f"Code execution failed after {self.max_retries + 1} attempts: {last_result.error}",

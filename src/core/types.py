@@ -34,6 +34,7 @@ def Err(message: str, stage: str) -> Result[Any]:
 
 class AgentEvent(BaseModel):
     agent: str
+    caller: str
     status: str
     data: dict[str, Any]
     timestamp: datetime
