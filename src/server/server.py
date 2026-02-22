@@ -4,10 +4,19 @@ from pydantic import BaseModel
 from core.events import WebSocketEmitter
 from orchestration.main_flow import Director
 from fastapi import BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 
 from server.types import ConnectionManager
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 manager = ConnectionManager()
 director = Director(emitter=WebSocketEmitter(websocket_manager=manager))
 

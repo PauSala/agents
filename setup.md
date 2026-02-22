@@ -27,5 +27,4 @@ The Python tool runs LLM-generated code inside a Docker container for isolation.
 
 
 ## Server
-- Set the path: export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-- run the server: python3 -m server.server 
+export PYTHONPATH=$PYTHONPATH:$(pwd)/src && python3 -m server.server 
