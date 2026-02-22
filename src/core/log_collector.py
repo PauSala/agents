@@ -19,26 +19,22 @@ class LogEntry(BaseModel):
 class LogCollector:
     """Shared structured log collector for tracing agent decisions."""
 
-    def __init__(self, trace_id: str | None = None, emitter: EventEmitter | None = None):
+    def __init__(self, emitter: EventEmitter, trace_id: str | None = None):
         self.trace_id = trace_id or uuid4().hex[:12]
         self.entries: list[LogEntry] = []
         self.emitter = emitter
 
-    def set_emitter(self, emitter: EventEmitter):
-        self.emitter = emitter
-
-    async def log(self, agent: str, event: str, **data: Any) -> None:
+    def log(self, agent: str, event: str, **data: Any) -> None:
         entry = LogEntry(trace_id=self.trace_id, agent=agent, event=event, data=data)
         self.entries.append(entry)
-        if self.emitter is not None:
-            await self.emitter.notify(
-                AgentEvent(
-                    agent=entry.agent,
-                    status=entry.event,
-                    data=entry.data,
-                    timestamp=entry.timestamp,
-                )
+        self.emitter.notify(
+            AgentEvent(
+                agent=entry.agent,
+                status=entry.event,
+                data=entry.data,
+                timestamp=entry.timestamp,
             )
+        )
 
     def summary(self) -> str:
         lines: list[str] = [f"trace: {self.trace_id}"]

@@ -2,46 +2,75 @@ from agents.decision_agent import DecisionAgent
 from agents.decision_response import DecisionType
 from agents.python_agent import PythonAgent
 from agents.tool_selection_agent import ToolSelectionAgent
+from core.events import EventEmitter
 from core.llm_wrapper import LLM
 from core.log_collector import LogCollector
 from tools.python_tool import PythonCodeTool
 from tools.registry import ToolRegistry
 
-fast_llm = LLM(model="deepseek-coder:6.7b")
-strong_llm = LLM(model="qwen2.5-coder:14b")
-log = LogCollector()
 
+class Director:
+    def __init__(self, emitter: EventEmitter):
+        # Core infrastructure
+        self.log = LogCollector(emitter)
 
-registry = ToolRegistry()
-python_tool = PythonCodeTool()
-python_agent = PythonAgent(strong_llm, tool=python_tool, log=log)
-registry.register(python_tool, handler=python_agent.run)
+        # LLMs
+        self.fast_llm = LLM(model="deepseek-coder:6.7b")
+        self.strong_llm = LLM(model="qwen2.5-coder:14b")
 
-agent = DecisionAgent(fast_llm, log=log)
-tool_agent = ToolSelectionAgent(strong_llm, registry=registry, log=log)
+        # Tool registry
+        self.registry = ToolRegistry()
 
+        # Tools + agents
+        self.python_tool = PythonCodeTool()
+        self.python_agent = PythonAgent(
+            self.strong_llm,
+            tool=self.python_tool,
+            log=self.log,
+        )
 
-def run(prompt: str):
-    decision = agent.run(prompt)
+        self.registry.register(
+            self.python_tool,
+            handler=self.python_agent.run,
+        )
 
-    if not decision.ok or decision.value is None:
-        print(f"Decision failed: {decision.error}")
-    elif decision.value.type == DecisionType.TOOL:
-        selection = tool_agent.run(prompt)
+        self.decision_agent = DecisionAgent(
+            self.fast_llm,
+            log=self.log,
+        )
 
-        if not selection.ok or selection.value is None:
-            print(f"Tool selection failed: {selection.error}")
-        else:
-            response = registry.execute(
-                selection.value.tool_name, selection.value.prompt
+        self.tool_selection_agent = ToolSelectionAgent(
+            self.strong_llm,
+            registry=self.registry,
+            log=self.log,
+        )
+
+    def run(self, prompt: str) -> None:
+        decision = self.decision_agent.run(prompt)
+
+        if not decision.ok or decision.value is None:
+            print(f"Decision failed: {decision.error}")
+            return
+
+        if decision.value.type == DecisionType.TOOL:
+            selection = self.tool_selection_agent.run(prompt)
+
+            if not selection.ok or selection.value is None:
+                print(f"Tool selection failed: {selection.error}")
+                return
+
+            response = self.registry.execute(
+                selection.value.tool_name,
+                selection.value.prompt,
             )
 
             if not response.ok:
                 print(f"Tool execution failed: {response.error}")
             else:
                 print(response.value)
-    else:
-        print("Non-tool task — not yet implemented")
 
-    print("\n--- Agent Log ---")
-    print(log.summary())
+        else:
+            print("Non-tool task — not yet implemented")
+
+        print("\n--- Agent Log ---")
+        print(self.log.summary())

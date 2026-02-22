@@ -1,6 +1,6 @@
 """Core components for agents."""
 
-from core.events import EventEmitter
+from core.events import WebSocketEmitter, EventEmitter, NoOpEmitter
 from core.inference_guard import InferenceGuard, TextResponse
 from core.llm_wrapper import LLM
 from core.log_collector import LogCollector
@@ -13,5 +13,7 @@ __all__ = [
     "LogCollector",
     "Result",
     "ErrorInfo",
+    "WebSocketEmitter",
     "EventEmitter",
+    "NoOpEmitter",
 ]
