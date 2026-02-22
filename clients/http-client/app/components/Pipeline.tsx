@@ -37,7 +37,7 @@ export default function Pipeline() {
   };
 
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-6 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+    <div className="flex w-full m-4 flex-col gap-6 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
       <StatusHeader status={status} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -61,6 +61,7 @@ export default function Pipeline() {
           </button>
         </div>
       </form>
+      <AgentGraph events={events} />
 
       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
         {events.map((ev, i) => (
@@ -78,8 +79,6 @@ export default function Pipeline() {
           </div>
         )}
       </div>
-
-      <AgentGraph events={events} />
     </div>
   );
 }

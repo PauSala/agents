@@ -1,12 +1,12 @@
-import { Node, Edge } from "@xyflow/react";
+import { Node, Edge, Position } from "@xyflow/react";
 import { AgentEvent } from "@/hooks/useSocket";
 import { AgentNode, buildDag } from "./dag";
 
 const STATUS_COLORS: Record<string, string> = {
-    running: "#e168d1",
-    success: "#2ee370",
+    running: "#ef7de0",
+    success: "#2ee3c2",
     retry: "#efc444",
-    failed: "#ef4444",
+    failed: "#e26464",
     exhausted: "#5b076a",
     end: "#6b7280",
 };
@@ -20,13 +20,20 @@ export function transformDagToFlow(events: AgentEvent[]) {
     const dag = buildDag(events);
     const nodes: Node[] = [];
     const edges: Edge[] = [];
+    const nodeWidth = 200;
 
-    const levelCounter: Record<number, number> = {};
+    const xSpacing = nodeWidth + 50;
+    const yOffset = 120;
+    let xIndex = 0;
 
-    function traverse(node: AgentNode, depth: number = 0) {
-        if (levelCounter[depth] === undefined) levelCounter[depth] = 0;
-
+    function traverse(node: AgentNode, childIndex: number) {
         const color = borderColor(node.status);
+
+        let y = 0;
+        if (xIndex > 0) {
+            const direction = childIndex % 2 === 0 ? -1 : 1;
+            y = direction * yOffset;
+        }
 
         nodes.push({
             id: node.agent_id,
@@ -34,36 +41,35 @@ export function transformDagToFlow(events: AgentEvent[]) {
                 label: node.agent.replace(/([a-z])([A-Z])/g, "$1 $2"),
                 status: node.status,
             },
-            position: {
-                x: depth * 300,
-                y: levelCounter[depth] * 200,
-            },
+            position: { x: xIndex * xSpacing, y },
+            sourcePosition: Position.Right,
+            targetPosition: Position.Left,
             style: {
                 background: "#18181b",
-                color: "#fff",
+                color: "#adabab",
                 border: `2px solid ${color}`,
                 borderRadius: "8px",
-                width: 220,
+                width: nodeWidth,
             },
         });
 
-        levelCounter[depth]++;
+        xIndex++;
 
-        for (const child of node.children) {
+        node.children.forEach((child, i) => {
             const done = child.status === "success" || child.status === "end";
             edges.push({
                 id: `e-${node.agent_id}-${child.agent_id}`,
                 source: node.agent_id,
                 target: child.agent_id,
                 animated: !done,
-                style: { stroke: "#2dd4bf", strokeWidth: 1 },
+                style: { stroke: color, strokeWidth: 2 },
+                type: '',
             });
 
-            traverse(child, depth + 1);
-        }
+            traverse(child, i);
+        });
     }
 
-    dag.forEach((root) => traverse(root));
-
+    dag.forEach((root, i) => traverse(root, i));
     return { nodes, edges };
 }
