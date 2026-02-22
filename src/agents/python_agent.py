@@ -11,13 +11,12 @@ from tools.python_tool import PythonCodeOutput, PythonCodeTool
 class PythonAgent(BaseAgent[PythonCodeOutput]):
     def __init__(
         self,
-        name: str,
         llm: LLM,
         tool: PythonCodeTool,
         max_retries: int = 6,
         log: LogCollector | None = None,
     ):
-        super().__init__(name, llm, log)
+        super().__init__(llm, log)
         self.python_tool = tool
         self.max_retries = max_retries
 

@@ -13,8 +13,8 @@ T = TypeVar("T")
 
 
 class BaseAgent(ABC, Generic[T]):
-    def __init__(self, name: str, llm: LLM, log: LogCollector | None = None):
-        self.name = name
+    def __init__(self, llm: LLM, log: LogCollector | None = None):
+        self.name = type(self).__name__
         self.agent_id = uuid4().hex
         self.llm = llm
         self.guard = InferenceGuard(llm)

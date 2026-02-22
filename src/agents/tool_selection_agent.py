@@ -12,9 +12,9 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
     """Agent that selects tools based on task description."""
 
     def __init__(
-        self, name: str, llm: LLM, registry: ToolRegistry, log: LogCollector | None = None
+        self, llm: LLM, registry: ToolRegistry, log: LogCollector | None = None
     ):
-        super().__init__(name, llm, log)
+        super().__init__(llm, log)
         self.registry = registry
 
     def run(self, task: str, caller_id: str = "") -> Result[ToolSelection]:

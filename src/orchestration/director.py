@@ -12,9 +12,8 @@ from tools.registry import ToolRegistry
 
 
 class Director:
-    NAME = "director"
-
     def __init__(self, emitter: EventEmitter):
+        self.name = type(self).__name__
         self.agent_id = uuid4().hex
 
         # Core infrastructure
@@ -30,7 +29,6 @@ class Director:
         # Tools + agents
         self.python_tool = PythonCodeTool()
         self.python_agent = PythonAgent(
-            name="python_agent",
             llm=self.strong_llm,
             tool=self.python_tool,
             log=self.log,
@@ -42,25 +40,23 @@ class Director:
         )
 
         self.decision_agent = DecisionAgent(
-            name="decision_agent",
             llm=self.fast_llm,
             log=self.log,
         )
 
         self.tool_selection_agent = ToolSelectionAgent(
-            name="tool_selection_agent",
             llm=self.strong_llm,
             registry=self.registry,
             log=self.log,
         )
 
     def run(self, prompt: str) -> None:
-        self.log.log(self.NAME, "start", agent_id=self.agent_id, task=prompt)
+        self.log.log(self.name, "start", agent_id=self.agent_id, task=prompt)
         decision = self.decision_agent.run(prompt, caller_id=self.agent_id)
 
         if not decision.ok or decision.value is None:
             print(f"Decision failed: {decision.error}")
-            self.log.log(self.NAME, "end", agent_id=self.agent_id)
+            self.log.log(self.name, "end", agent_id=self.agent_id)
             return
 
         if decision.value.type == DecisionType.TOOL:
@@ -68,7 +64,7 @@ class Director:
 
             if not selection.ok or selection.value is None:
                 print(f"Tool selection failed: {selection.error}")
-                self.log.log(self.NAME, "end", agent_id=self.agent_id)
+                self.log.log(self.name, "end", agent_id=self.agent_id)
                 return
 
             response = self.registry.execute(
@@ -85,6 +81,6 @@ class Director:
         else:
             print("Non-tool task — not yet implemented")
 
-        self.log.log(self.NAME, "end", agent_id=self.agent_id)
+        self.log.log(self.name, "end", agent_id=self.agent_id)
         print("\n--- Agent Log ---")
         print(self.log.summary())
