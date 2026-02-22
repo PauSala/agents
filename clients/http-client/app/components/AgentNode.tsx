@@ -37,7 +37,11 @@ export function AgentNode({ data }: { data: Record<string, string> }) {
           <div
             className={`p-1.5 rounded-md ${data.status === "running" ? "animate-spin" : ""}`}
           >
-            <Icon size={16} className="text-teal-400" />
+            <Icon
+              size={16}
+              className="text-teal-400"
+              style={{ color: data.color || "#3f3f46" }}
+            />
           </div>
           <span className="text-xs font-bold uppercase tracking-tight text-zinc-400">
             {data.label}
@@ -48,7 +52,7 @@ export function AgentNode({ data }: { data: Record<string, string> }) {
       {/* Progress Bar at the bottom */}
       <div className="h-1 w-full bg-zinc-800">
         <div
-          className={`h-full transition-all duration-500 ${endStatus(data) ? "w-full bg-teal-500" : "w-1/3 bg-teal-500/50"}`}
+          className={`h-full transition-all duration-500 ${endStatus(data) ? "w-full bg-teal-500" : data.status === "failed" ? "w-full bg-pink-500" : "w-1/3 bg-teal-500/50"}`}
         />
       </div>
 
@@ -56,7 +60,7 @@ export function AgentNode({ data }: { data: Record<string, string> }) {
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 bg-teal-500"
+        className={`w-3 h-3 bg-teal-500`}
       />
     </div>
   );

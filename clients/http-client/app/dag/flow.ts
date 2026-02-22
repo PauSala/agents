@@ -6,7 +6,7 @@ const STATUS_COLORS: Record<string, string> = {
     running: "#ef7de0",
     success: "#2ee3c2",
     retry: "#efc444",
-    failed: "#e26464",
+    failed: "#ec4899",
     exhausted: "#5b076a",
     end: "#6b7280",
 };
@@ -26,13 +26,13 @@ export function transformDagToFlow(events: AgentEvent[]) {
     const yOffset = 120;
     let xIndex = 0;
 
-    function traverse(node: AgentNode, childIndex: number) {
+    function traverse(node: AgentNode, childIndex: number, parentY: number) {
         const color = borderColor(node.status);
 
         let y = 0;
         if (xIndex > 0) {
             const direction = childIndex % 2 === 0 ? -1 : 1;
-            y = direction * yOffset;
+            y = direction * (yOffset + (direction * parentY));
         }
 
         nodes.push({
@@ -49,20 +49,21 @@ export function transformDagToFlow(events: AgentEvent[]) {
         xIndex++;
 
         node.children.forEach((child, i) => {
-            const done = child.status === "success" || child.status === "end";
+            const done = child.status === "success" || child.status === "end" || child.status === "failed";
+            const color = borderColor(child.status);
             edges.push({
                 id: `e-${node.agent_id}-${child.agent_id}`,
                 source: node.agent_id,
                 target: child.agent_id,
                 animated: !done,
-                style: { stroke: color, strokeWidth: 1 },
+                style: { stroke: color, strokeWidth: 2 },
                 // type: 'smoothstep',
             });
 
-            traverse(child, i);
+            traverse(child, i, y);
         });
     }
 
-    dag.forEach((root, i) => traverse(root, i));
+    dag.forEach((root, i) => traverse(root, i, 0));
     return { nodes, edges };
 }
