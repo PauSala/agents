@@ -3,12 +3,12 @@ import { AgentEvent } from "@/hooks/useSocket";
 import { AgentNode, buildDag } from "./dag";
 
 const STATUS_COLORS: Record<string, string> = {
-    running: "#ef7de0",
-    success: "#2ee3c2",
-    retry: "#efc444",
-    failed: "#ec4899",
-    exhausted: "#5b076a",
-    end: "#6b7280",
+    running: "#06b6d4",
+    success: "#14b8a6",
+    retry: "#d97706",
+    failed: "#f87171",
+    exhausted: "#2a212c",
+    end: "#71717a",
 };
 
 
