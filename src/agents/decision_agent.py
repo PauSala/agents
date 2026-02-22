@@ -7,7 +7,7 @@ from inspect import cleandoc
 class DecisionAgent(BaseAgent[AgentDecision]):
     def run(self, task: str) -> AgentDecision | InvalidResponse:
         prompt = self.build_prompt(task)
-        parsed = self.guard.run_structured_inference(self.llm, prompt, AgentDecision)
+        parsed = self.guard.run_structured_inference(prompt, AgentDecision)
 
         if parsed is None:
             return InvalidResponse(reason="Invalid JSON output after retries")
@@ -44,7 +44,7 @@ class DecisionAgent(BaseAgent[AgentDecision]):
               Use when the task requires performing an action that could require a tool (APIs, FS, Math).
 
             - code:
-              Use when asked to generate code.
+              Use when asked explicitly to generate code in any language
 
             - fail:
               Use only when the task is impossible to be resolved by a tool.

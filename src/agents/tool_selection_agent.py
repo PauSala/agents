@@ -16,7 +16,7 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
     def run(self, task: str) -> ToolSelection | InvalidResponse:
         """Execute task by selecting and running appropriate tool."""
         prompt = self.build_prompt(task)
-        parsed = self.guard.run_structured_inference(self.llm, prompt, ToolSelection)
+        parsed = self.guard.run_structured_inference(prompt, ToolSelection)
 
         if parsed is None:
             return InvalidResponse(reason="Failed to parse tool selection")

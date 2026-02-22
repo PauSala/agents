@@ -11,7 +11,7 @@ T = TypeVar("T")
 class BaseAgent(ABC, Generic[T]):
     def __init__(self, llm: LLM):
         self.llm = llm
-        self.guard = InferenceGuard()
+        self.guard = InferenceGuard(llm)
 
     @abstractmethod
     def run(self, task: str) -> T | InvalidResponse:

@@ -9,8 +9,7 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
     def __init__(self, llm: LLM, max_retries: int = 6):
         super().__init__(llm)
         self.python_tool = PythonCodeTool()
-        self._max_retries_limit = max_retries
-        self.current_retries = 0
+        self.max_retries = max_retries
         
         self.code_schema = cleandoc("""
             {
@@ -20,36 +19,41 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             }
         """)
 
-    def run(self, task: str, previous_error: str | None = None, failed_code: str = "") -> PythonCodeOutput | InvalidResponse:
-        if previous_error and failed_code:
-            prompt = self.build_fix_prompt(task, failed_code, previous_error)
-        else:
-            prompt = self.build_prompt(task)
+    def run(self, task: str) -> PythonCodeOutput | InvalidResponse:
+        previous_error: str | None = None
+        failed_code = ""
+        result: PythonCodeOutput | None = None
 
-        parsed = self.guard.run_structured_inference(self.llm, prompt, ToolCall)
+        for _ in range(self.max_retries + 1):
+            if previous_error and failed_code:
+                prompt = self.build_fix_prompt(task, failed_code, previous_error)
+            else:
+                prompt = self.build_prompt(task)
 
-        if not parsed:
-            return InvalidResponse(reason="Failed to parse code execution request")
+            parsed = self.guard.run_structured_inference(prompt, ToolCall)
 
-        code_attr = parsed.arguments.get("code")
-        if not isinstance(code_attr, str):
-            return InvalidResponse(reason="LLM returned non-string code attribute")
+            if not parsed:
+                return InvalidResponse(reason="Failed to parse code execution request")
 
-        try:
-            input_data = self.python_tool.input_schema(code=code_attr)
-            result = self.python_tool.execute(input_data)
-            
-            if not result.success and self.current_retries < self._max_retries_limit:
-                self.current_retries += 1
-                return self.run(task, previous_error=result.error, failed_code=code_attr)
-            
-            return result
+            code_attr = parsed.arguments.get("code")
+            if not isinstance(code_attr, str):
+                return InvalidResponse(reason="LLM returned non-string code attribute")
 
-        except Exception as e:
-            if self.current_retries < self._max_retries_limit:
-                self.current_retries += 1
-                return self.run(task, previous_error=str(e), failed_code=code_attr)
-            return InvalidResponse(reason=f"Python tool failed after retries: {e}")
+            try:
+                input_data = self.python_tool.input_schema(code=code_attr)
+                result = self.python_tool.execute(input_data)
+            except Exception as e:
+                previous_error = str(e)
+                failed_code = code_attr
+                continue
+
+            if result.success:
+                return result
+
+            previous_error = result.error
+            failed_code = code_attr
+
+        return result if result is not None else InvalidResponse(reason="Python tool failed after retries")
 
     def build_fix_prompt(self, task: str, failed_code: str, error: str) -> str:
         output_constraints = self.json_output_instructions(self.code_schema)
