@@ -11,6 +11,7 @@ import {
   useEdgesState,
   Node,
   Edge,
+  useReactFlow,
 } from "@xyflow/react";
 import { useEffect } from "react";
 import { AgentNode } from "./AgentNode";
@@ -18,6 +19,21 @@ import { AgentNode } from "./AgentNode";
 const nodeTypes = {
   agent: AgentNode,
 };
+
+function FlowUpdater({ nodes }: { nodes: Node[] }) {
+  const { fitView } = useReactFlow();
+
+  useEffect(() => {
+    if (nodes.length > 0) {
+      fitView({
+        duration: 300,
+        padding: 0.2,
+      });
+    }
+  }, [nodes.length, fitView]);
+
+  return null;
+}
 
 export default function AgentGraph({ events }: { events: AgentEvent[] }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -30,18 +46,19 @@ export default function AgentGraph({ events }: { events: AgentEvent[] }) {
   }, [events, setNodes, setEdges]);
 
   return (
-    <div className="h-[600px] w-full border border-zinc-800 rounded-xl bg-zinc-950">
+    <div className="h-[400px] w-full border border-zinc-800 rounded-xl bg-zinc-950">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        maxZoom={1.0}
         nodeTypes={nodeTypes}
-        fitView
         colorMode="dark"
-        fitViewOptions={{ padding: 2.0 }}
+        zoomOnScroll={false}
       >
-        <Background gap={20} color="#27272a" />
+        <Background gap={20} color="#0f172a" bgColor="#0f172a" />
+        <FlowUpdater nodes={nodes} />
         <Controls />
       </ReactFlow>
     </div>

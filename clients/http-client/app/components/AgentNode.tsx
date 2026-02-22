@@ -7,12 +7,15 @@ import {
   Loader2,
 } from "lucide-react";
 
-const ICONS: Record<string, LucideIcon> = {
+export const ICONS: Record<string, LucideIcon> = {
   running: Loader2,
   success: CheckCircle2,
   failed: AlertCircle,
   end: AlertCircle,
 };
+
+const endStatus = (data: Record<string, string>) =>
+  data.status === "success" || data.status === "end";
 
 export function AgentNode({ data }: { data: Record<string, string> }) {
   const Icon = ICONS[data.status] || Bot;
@@ -45,7 +48,7 @@ export function AgentNode({ data }: { data: Record<string, string> }) {
       {/* Progress Bar at the bottom */}
       <div className="h-1 w-full bg-zinc-800">
         <div
-          className={`h-full transition-all duration-500 ${data.status === "success" ? "w-full bg-teal-500" : "w-1/3 bg-teal-500/50"}`}
+          className={`h-full transition-all duration-500 ${endStatus(data) ? "w-full bg-teal-500" : "w-1/3 bg-teal-500/50"}`}
         />
       </div>
 

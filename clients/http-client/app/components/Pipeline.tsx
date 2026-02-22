@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useSocket } from "@/hooks/useSocket";
 import { StatusHeader } from "@/components/StatusHeader";
-import { EventItem } from "@/components/EventItem";
 import AgentGraph from "./AgentGraph";
+import { ExecutionLog } from "./ExecutionLog";
 
 export default function Pipeline() {
   const { events, setEvents, status, isWorking, setIsWorking } = useSocket(
@@ -37,7 +37,7 @@ export default function Pipeline() {
   };
 
   return (
-    <div className="flex w-full m-4 flex-col gap-6 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+    <div className="flex w-full flex-col gap-6 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800">
       <StatusHeader status={status} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -63,22 +63,7 @@ export default function Pipeline() {
       </form>
       <AgentGraph events={events} />
 
-      <div className="space-y-4 pr-2">
-        {events.map((ev, i) => (
-          <EventItem key={i} event={ev} />
-        ))}
-
-        {isWorking && (
-          <div className="flex flex-col items-center justify-center py-12 text-zinc-400">
-            <div className="w-8 h-8 mb-2 border-2 border-dashed border-teal-500 rounded-full animate-spin" />
-            <p className="italic text-sm">
-              {events.length === 0
-                ? "Waiting for agent activity..."
-                : "Agent is thinking..."}
-            </p>
-          </div>
-        )}
-      </div>
+      <ExecutionLog events={events} isWorking={isWorking} />
     </div>
   );
 }
