@@ -12,6 +12,7 @@ export function useSocket(url: string) {
   const [status, setStatus] = useState<"connected" | "disconnected">(
     "disconnected",
   );
+  const [isWorking, setIsWorking] = useState(false);
 
   useEffect(() => {
     const socket = new WebSocket(url);
@@ -23,6 +24,11 @@ export function useSocket(url: string) {
         const rawData = JSON.parse(event.data);
         const data =
           typeof rawData === "string" ? JSON.parse(rawData) : rawData;
+
+        console.log(data);
+        if (data.status === "END") {
+          setIsWorking(false);
+        }
         setEvents((prev) => [
           ...prev,
           { ...data, timestamp: new Date().toLocaleTimeString() },
@@ -35,5 +41,5 @@ export function useSocket(url: string) {
     return () => socket.close();
   }, [url]);
 
-  return { events, setEvents, status };
+  return { events, setEvents, status, isWorking, setIsWorking };
 }

@@ -6,7 +6,9 @@ import { StatusHeader } from "@/components/StatusHeader";
 import { EventItem } from "@/components/EventItem";
 
 export default function Home() {
-  const { events, setEvents, status } = useSocket("ws://localhost:8000/ws");
+  const { events, setEvents, status, isWorking, setIsWorking } = useSocket(
+    "ws://localhost:8000/ws",
+  );
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -15,6 +17,7 @@ export default function Home() {
     if (!prompt.trim() || status !== "connected") return;
 
     setLoading(true);
+    setIsWorking(true);
     setEvents([]);
 
     try {
@@ -26,6 +29,7 @@ export default function Home() {
       setPrompt("");
     } catch (error) {
       console.error("Failed to send prompt:", error);
+      setIsWorking(false);
     } finally {
       setLoading(false);
     }
@@ -58,13 +62,19 @@ export default function Home() {
       </form>
 
       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-        {events.length === 0 ? (
+        {events.map(
+          (ev, i) => ev.agent !== "END" && <EventItem key={i} event={ev} />,
+        )}
+
+        {isWorking && (
           <div className="flex flex-col items-center justify-center py-12 text-zinc-400">
-            <div className="w-8 h-8 mb-2 border-2 border-dashed border-zinc-300 rounded-full animate-spin" />
-            <p className="italic text-sm">Waiting for agent activity...</p>
+            <div className="w-8 h-8 mb-2 border-2 border-dashed border-teal-500 rounded-full animate-spin" />
+            <p className="italic text-sm">
+              {events.length === 0
+                ? "Waiting for agent activity..."
+                : "Agent is thinking..."}
+            </p>
           </div>
-        ) : (
-          events.map((ev, i) => <EventItem key={i} event={ev} />)
         )}
       </div>
     </main>

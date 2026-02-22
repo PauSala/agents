@@ -1,10 +1,13 @@
 import { AgentEvent } from "@/hooks/useSocket";
 
+const formatAgentName = (name: string) =>
+  name.replace(/([a-z])([A-Z])/g, "$1 $2");
+
 export const EventItem = ({ event }: { event: AgentEvent }) => (
   <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 animate-in fade-in slide-in-from-bottom-2">
     <div className="flex justify-between items-start mb-1">
       <span className="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-300">
-        {event.agent || "System"}
+        {formatAgentName(event.agent || "System")}
       </span>
       <span className="text-[12px] text-zinc-400 font-mono">
         {event.timestamp}
