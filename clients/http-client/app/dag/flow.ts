@@ -3,12 +3,14 @@ import { AgentEvent } from "@/hooks/useSocket";
 import { AgentNode, buildDag } from "./dag";
 
 const STATUS_COLORS: Record<string, string> = {
-    start: "#3b82f6",
-    success: "#22c55e",
+    running: "#e168d1",
+    success: "#2ee370",
+    retry: "#efc444",
     failed: "#ef4444",
-    exhausted: "#ef4444",
+    exhausted: "#5b076a",
     end: "#6b7280",
 };
+
 
 function borderColor(status: string): string {
     return STATUS_COLORS[status] ?? "#3f3f46";
@@ -49,7 +51,6 @@ export function transformDagToFlow(events: AgentEvent[]) {
 
         for (const child of node.children) {
             const done = child.status === "success" || child.status === "end";
-            console.log(child.status)
             edges.push({
                 id: `e-${node.agent_id}-${child.agent_id}`,
                 source: node.agent_id,

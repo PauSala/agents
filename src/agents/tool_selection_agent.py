@@ -4,7 +4,7 @@ from agents.base_agent import BaseAgent
 from agents.types import ToolSelection
 from core.llm_wrapper import LLM
 from core.log_collector import LogCollector
-from core.types import Err, Ok, Result
+from core.types import AgentStatus, Err, Ok, Result
 from tools.registry import ToolRegistry, ToolSpec
 
 
@@ -19,19 +19,19 @@ class ToolSelectionAgent(BaseAgent[ToolSelection]):
 
     def run(self, task: str, caller_id: str = "") -> Result[ToolSelection]:
         """Execute task by selecting and running appropriate tool."""
-        self.log.log(self.name, "start", agent_id=self.agent_id, caller_id=caller_id, task=task)
+        self.log.log(self.name, AgentStatus.RUNNING.value, agent_id=self.agent_id, caller_id=caller_id, task=task)
         prompt = self.build_prompt(task)
         parsed = self.guard.run_structured_inference(prompt, ToolSelection)
 
         if parsed is None:
             self.log.log(
-                self.name, "failed", agent_id=self.agent_id, caller_id=caller_id, reason="Failed to parse tool selection"
+                self.name, AgentStatus.FAILED.value, agent_id=self.agent_id, caller_id=caller_id, reason="Failed to parse tool selection"
             )
             return Err("Failed to parse tool selection", stage="inference")
 
         self.log.log(
             self.name,
-            "selected",
+            AgentStatus.SUCCESS.value,
             agent_id=self.agent_id,
             caller_id=caller_id,
             tool=parsed.tool_name,

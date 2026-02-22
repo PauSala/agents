@@ -4,7 +4,7 @@ from agents.base_agent import BaseAgent
 from agents.types import ToolCall
 from core.llm_wrapper import LLM
 from core.log_collector import LogCollector
-from core.types import Err, Ok, Result
+from core.types import AgentStatus, Err, Ok, Result
 from tools.python_tool import PythonCodeOutput, PythonCodeTool
 
 
@@ -29,7 +29,7 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         """)
 
     def run(self, task: str, caller_id: str = "") -> Result[PythonCodeOutput]:
-        self.log.log(self.name, "start", agent_id=self.agent_id, caller_id=caller_id, task=task)
+        self.log.log(self.name, AgentStatus.RUNNING.value, agent_id=self.agent_id, caller_id=caller_id, task=task)
         previous_error: str | None = None
         failed_code = ""
         last_result: PythonCodeOutput | None = None
@@ -37,7 +37,7 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         for attempt in range(self.max_retries + 1):
             if previous_error and failed_code:
                 self.log.log(
-                    self.name, "retry", agent_id=self.agent_id, caller_id=caller_id, attempt=attempt, error=previous_error
+                    self.name, AgentStatus.RETRY.value, agent_id=self.agent_id, caller_id=caller_id, attempt=attempt, error=previous_error
                 )
                 prompt = self.build_fix_prompt(task, failed_code, previous_error)
             else:
@@ -48,7 +48,7 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             if not parsed:
                 self.log.log(
                     self.name,
-                    "failed",
+                    AgentStatus.FAILED.value,
                     agent_id=self.agent_id,
                     caller_id=caller_id,
                     reason="Failed to parse code execution request",
@@ -59,7 +59,7 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
             if not isinstance(code_attr, str):
                 self.log.log(
                     self.name,
-                    "failed",
+                    AgentStatus.FAILED.value,
                     agent_id=self.agent_id,
                     caller_id=caller_id,
                     reason="LLM returned non-string code attribute",
@@ -75,13 +75,13 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
                 continue
 
             if last_result.success:
-                self.log.log(self.name, "success", agent_id=self.agent_id, caller_id=caller_id, output=last_result.output)
+                self.log.log(self.name, AgentStatus.SUCCESS.value, agent_id=self.agent_id, caller_id=caller_id, output=last_result.output)
                 return Ok(last_result)
 
             previous_error = last_result.error
             failed_code = code_attr
 
-        self.log.log(self.name, "exhausted", agent_id=self.agent_id, caller_id=caller_id, attempts=self.max_retries + 1)
+        self.log.log(self.name, AgentStatus.EXHAUSTED.value, agent_id=self.agent_id, caller_id=caller_id, attempts=self.max_retries + 1)
         if last_result is not None:
             return Err(
                 f"Code execution failed after {self.max_retries + 1} attempts: {last_result.error}",

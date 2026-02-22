@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
@@ -7,6 +8,14 @@ from typing import Protocol
 
 
 T = TypeVar("T")
+
+class AgentStatus(Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+    RUNNING = "running"
+    RETRY = "retry"
+    EXHAUSTED = "exhausted"
+    END = "end"
 
 
 @dataclass(frozen=True)
