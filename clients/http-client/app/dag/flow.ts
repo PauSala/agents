@@ -23,7 +23,7 @@ export function transformDagToFlow(events: AgentEvent[]) {
     const nodeWidth = 180;
 
     const xSpacing = nodeWidth + 50;
-    const yOffset = 120;
+    const yOffset = 90;
     let xIndex = 1;
 
     function traverse(node: AgentNode, childIndex: number, parentY: number) {

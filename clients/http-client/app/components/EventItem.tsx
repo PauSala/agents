@@ -14,7 +14,7 @@ export const EventItem = ({ event }: { event: AgentEvent }) => {
   return (
     <div className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 animate-in fade-in slide-in-from-bottom-2">
       <div className="flex justify-between items-start mb-1">
-        <span className="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-300">
+        <span className="text-xs font-bold capitalize tracking-wider text-teal-600 dark:text-teal-300">
           {formatAgentName(event.agent)}
         </span>
         <span className="text-[12px] text-zinc-400 font-mono">
@@ -22,7 +22,7 @@ export const EventItem = ({ event }: { event: AgentEvent }) => {
         </span>
       </div>
       <p
-        className={`flex w-25 justify-center items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-tight ${statusStyles}`}
+        className={`flex w-25 justify-center items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold capitalize tracking-tight ${statusStyles}`}
       >
         {event.status}
       </p>
