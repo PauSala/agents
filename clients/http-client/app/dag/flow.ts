@@ -56,7 +56,7 @@ export function transformDagToFlow(events: AgentEvent[]) {
                 target: child.agent_id,
                 animated: !done,
                 style: { stroke: color, strokeWidth: 1 },
-                type: '',
+                // type: 'smoothstep',
             });
 
             traverse(child, i);
