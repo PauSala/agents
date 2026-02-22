@@ -1,8 +1,8 @@
 """Tool that executes Python code in a Docker sandbox."""
 
+import os
 import subprocess
 import tempfile
-import os
 from typing import Optional
 
 from pydantic import BaseModel

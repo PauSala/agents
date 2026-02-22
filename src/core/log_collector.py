@@ -4,6 +4,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+from core.events import UINotifier
+
 
 class LogEntry(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
@@ -16,7 +18,7 @@ class LogEntry(BaseModel):
 class LogCollector:
     """Shared structured log collector for tracing agent decisions."""
 
-    def __init__(self, trace_id: str | None = None):
+    def __init__(self, trace_id: str | None = None, emitter: UINotifier | None = None):
         self.trace_id = trace_id or uuid4().hex[:12]
         self.entries: list[LogEntry] = []
 

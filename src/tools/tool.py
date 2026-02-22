@@ -1,7 +1,8 @@
 """Base tool interface."""
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Type
+from typing import Generic, Type, TypeVar
+
 from pydantic import BaseModel
 
 InputT = TypeVar("InputT", bound=BaseModel)

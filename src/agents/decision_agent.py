@@ -1,7 +1,8 @@
+from inspect import cleandoc
+
 from agents.base_agent import BaseAgent
 from agents.decision_response import AgentDecision
-from core.types import Ok, Err, Result
-from inspect import cleandoc
+from core.types import Err, Ok, Result
 
 
 class DecisionAgent(BaseAgent[AgentDecision]):

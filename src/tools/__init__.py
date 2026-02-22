@@ -1,9 +1,8 @@
 """Tools for agents."""
 
-from tools.tool import Tool
+from tools.python_tool import PythonCodeInput, PythonCodeOutput, PythonCodeTool
 from tools.registry import ToolRegistry
-
-from tools.python_tool import PythonCodeTool, PythonCodeInput, PythonCodeOutput
+from tools.tool import Tool
 
 __all__ = [
     "Tool",

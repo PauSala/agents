@@ -1,10 +1,12 @@
+from inspect import cleandoc
+
 from agents.base_agent import BaseAgent
 from agents.types import ToolSelection
-from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
-from core.types import Ok, Err, Result
+from core.log_collector import LogCollector
+from core.types import Err, Ok, Result
 from tools.registry import ToolRegistry, ToolSpec
-from inspect import cleandoc
+
 
 class ToolSelectionAgent(BaseAgent[ToolSelection]):
     """Agent that selects tools based on task description."""

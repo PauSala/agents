@@ -1,10 +1,12 @@
 from inspect import cleandoc
+
 from agents.base_agent import BaseAgent
 from agents.types import ToolCall
-from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
-from core.types import Ok, Err, Result
-from tools.python_tool import PythonCodeTool, PythonCodeOutput
+from core.log_collector import LogCollector
+from core.types import Err, Ok, Result
+from tools.python_tool import PythonCodeOutput, PythonCodeTool
+
 
 class PythonAgent(BaseAgent[PythonCodeOutput]):
     def __init__(self, llm: LLM, tool: PythonCodeTool, max_retries: int = 6, log: LogCollector | None = None):

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
+from pydantic import BaseModel
+
 T = TypeVar("T")
 
 
@@ -25,3 +27,10 @@ def Ok(value: T) -> Result[T]:
 def Err(message: str, stage: str) -> Result[Any]:
     """Create a failure Result."""
     return Result(ok=False, error=ErrorInfo(message=message, stage=stage))
+
+
+class AgentEvent(BaseModel):
+    agent: str
+    status: str
+    data: dict[str, Any]
+    timestamp: str

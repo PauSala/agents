@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
+from inspect import cleandoc
 from typing import Generic, TypeVar
 
 from core.inference_guard import InferenceGuard
-from core.log_collector import LogCollector
 from core.llm_wrapper import LLM
+from core.log_collector import LogCollector
 from core.types import Result
-from inspect import cleandoc
 
 T = TypeVar("T")
 
