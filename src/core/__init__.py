@@ -16,5 +16,5 @@ __all__ = [
     "WebSocketEmitter",
     "EventEmitter",
     "NoOpEmitter",
-    "AgentStatus"
+    "AgentStatus",
 ]

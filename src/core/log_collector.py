@@ -25,8 +25,22 @@ class LogCollector:
         self.entries: list[LogEntry] = []
         self.emitter = emitter
 
-    def log(self, agent: str, event: str, agent_id: str = "", caller_id: str = "", **data: Any) -> None:
-        entry = LogEntry(trace_id=self.trace_id, agent=agent, agent_id=agent_id, caller_id=caller_id, event=event, data=data)
+    def log(
+        self,
+        agent: str,
+        event: str,
+        agent_id: str = "",
+        caller_id: str = "",
+        **data: Any,
+    ) -> None:
+        entry = LogEntry(
+            trace_id=self.trace_id,
+            agent=agent,
+            agent_id=agent_id,
+            caller_id=caller_id,
+            event=event,
+            data=data,
+        )
         self.entries.append(entry)
         self.emitter.notify(
             AgentEvent(

@@ -6,7 +6,6 @@ from core.types import AgentEvent
 from server.types import ConnectionManager
 
 
-
 class NoOpEmitter:
     def notify(self, event: AgentEvent) -> None:
         print(event.model_dump_json())

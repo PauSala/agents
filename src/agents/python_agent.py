@@ -29,7 +29,13 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         """)
 
     def run(self, task: str, caller_id: str = "") -> Result[PythonCodeOutput]:
-        self.log.log(self.name, AgentStatus.RUNNING.value, agent_id=self.agent_id, caller_id=caller_id, task=task)
+        self.log.log(
+            self.name,
+            AgentStatus.RUNNING.value,
+            agent_id=self.agent_id,
+            caller_id=caller_id,
+            task=task,
+        )
         previous_error: str | None = None
         failed_code = ""
         last_result: PythonCodeOutput | None = None
@@ -37,7 +43,12 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
         for attempt in range(self.max_retries + 1):
             if previous_error and failed_code:
                 self.log.log(
-                    self.name, AgentStatus.RETRY.value, agent_id=self.agent_id, caller_id=caller_id, attempt=attempt, error=previous_error
+                    self.name,
+                    AgentStatus.RETRY.value,
+                    agent_id=self.agent_id,
+                    caller_id=caller_id,
+                    attempt=attempt,
+                    error=previous_error,
                 )
                 prompt = self.build_fix_prompt(task, failed_code, previous_error)
             else:
@@ -75,13 +86,25 @@ class PythonAgent(BaseAgent[PythonCodeOutput]):
                 continue
 
             if last_result.success:
-                self.log.log(self.name, AgentStatus.SUCCESS.value, agent_id=self.agent_id, caller_id=caller_id, output=last_result.output)
+                self.log.log(
+                    self.name,
+                    AgentStatus.SUCCESS.value,
+                    agent_id=self.agent_id,
+                    caller_id=caller_id,
+                    output=last_result.output,
+                )
                 return Ok(last_result)
 
             previous_error = last_result.error
             failed_code = code_attr
 
-        self.log.log(self.name, AgentStatus.EXHAUSTED.value, agent_id=self.agent_id, caller_id=caller_id, attempts=self.max_retries + 1)
+        self.log.log(
+            self.name,
+            AgentStatus.EXHAUSTED.value,
+            agent_id=self.agent_id,
+            caller_id=caller_id,
+            attempts=self.max_retries + 1,
+        )
         if last_result is not None:
             return Err(
                 f"Code execution failed after {self.max_retries + 1} attempts: {last_result.error}",

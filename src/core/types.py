@@ -6,8 +6,8 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel
 from typing import Protocol
 
-
 T = TypeVar("T")
+
 
 class AgentStatus(Enum):
     SUCCESS = "success"
@@ -48,6 +48,7 @@ class AgentEvent(BaseModel):
     status: str
     data: dict[str, Any]
     timestamp: datetime
+
 
 class EventEmitter(Protocol):
     def notify(self, event: AgentEvent) -> None: ...

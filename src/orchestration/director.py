@@ -51,7 +51,9 @@ class Director:
         )
 
     def run(self, prompt: str) -> None:
-        self.log.log(self.name, AgentStatus.RUNNING.value, agent_id=self.agent_id, task=prompt)
+        self.log.log(
+            self.name, AgentStatus.RUNNING.value, agent_id=self.agent_id, task=prompt
+        )
         decision = self.decision_agent.run(prompt, caller_id=self.agent_id)
 
         if not decision.ok or decision.value is None:
