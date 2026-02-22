@@ -46,7 +46,7 @@ export default function AgentGraph({ events }: { events: AgentEvent[] }) {
   }, [events, setNodes, setEdges]);
 
   return (
-    <div className="h-[400px] w-full border border-zinc-800 rounded-xl bg-zinc-950">
+    <div className="h-[300px] w-full border border-zinc-800 rounded-xl bg-zinc-950">
       <ReactFlow
         nodes={nodes}
         edges={edges}

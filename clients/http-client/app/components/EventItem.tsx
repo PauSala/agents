@@ -7,7 +7,7 @@ export const EventItem = ({ event }: { event: AgentEvent }) => {
   const statusStyles =
     {
       running: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
-      success: "bg-teal-500/10 text-teal-500 border-teal-500/20",
+      success: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
       failed: "bg-red-500/10 text-red-500 border-red-500/20",
       end: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
     }[event.status] || "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";

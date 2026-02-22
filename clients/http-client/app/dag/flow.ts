@@ -24,7 +24,7 @@ export function transformDagToFlow(events: AgentEvent[]) {
 
     const xSpacing = nodeWidth + 50;
     const yOffset = 120;
-    let xIndex = 0;
+    let xIndex = 1;
 
     function traverse(node: AgentNode, childIndex: number, parentY: number) {
         const color = borderColor(node.status);
