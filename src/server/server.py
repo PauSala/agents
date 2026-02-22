@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from core.events import WebSocketEmitter
-from orchestration.main_flow import Director
+from orchestration.director import Director
 from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 

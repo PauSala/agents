@@ -1,5 +1,5 @@
 """Orquestration pipeline"""
 
-from orchestration.main_flow import Director
+from orchestration.director import Director
 
 __all__ = ["Director"]

@@ -50,6 +50,7 @@ class Director:
 
         if not decision.ok or decision.value is None:
             print(f"Decision failed: {decision.error}")
+            self.log.log(agent="", event="END", data={})
             return
 
         if decision.value.type == DecisionType.TOOL:
@@ -57,6 +58,7 @@ class Director:
 
             if not selection.ok or selection.value is None:
                 print(f"Tool selection failed: {selection.error}")
+                self.log.log(agent="", event="END", data={})
                 return
 
             response = self.registry.execute(
@@ -72,5 +74,6 @@ class Director:
         else:
             print("Non-tool task — not yet implemented")
 
+        self.log.log(agent="", event="END", data={})
         print("\n--- Agent Log ---")
         print(self.log.summary())
