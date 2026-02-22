@@ -14,15 +14,12 @@ export const ICONS: Record<string, LucideIcon> = {
   end: AlertCircle,
 };
 
-const endStatus = (data: Record<string, string>) =>
-  data.status === "success" || data.status === "end";
-
 export function AgentNode({ data }: { data: Record<string, string> }) {
   const Icon = ICONS[data.status] || Bot;
 
   return (
     <div
-      className="min-w-[200px] shadow-xl rounded-lg bg-zinc-900 border-1 border-zinc-800 overflow-hidden"
+      className="min-w-[180px] shadow-xl rounded-lg bg-zinc-900 border-1 border-zinc-800 overflow-hidden"
       style={{ borderColor: data.color || "#3f3f46" }}
     >
       {/* Target Handle (Left) */}
@@ -47,13 +44,6 @@ export function AgentNode({ data }: { data: Record<string, string> }) {
             {data.label}
           </span>
         </div>
-      </div>
-
-      {/* Progress Bar at the bottom */}
-      <div className="h-1 w-full bg-zinc-800">
-        <div
-          className={`h-full transition-all duration-500 ${endStatus(data) ? "w-full bg-teal-500" : data.status === "failed" ? "w-full bg-pink-500" : "w-1/3 bg-teal-500/50"}`}
-        />
       </div>
 
       {/* Source Handle (Right) */}

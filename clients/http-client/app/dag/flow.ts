@@ -20,7 +20,7 @@ export function transformDagToFlow(events: AgentEvent[]) {
     const dag = buildDag(events);
     const nodes: Node[] = [];
     const edges: Edge[] = [];
-    const nodeWidth = 200;
+    const nodeWidth = 180;
 
     const xSpacing = nodeWidth + 50;
     const yOffset = 120;
