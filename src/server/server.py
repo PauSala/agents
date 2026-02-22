@@ -2,29 +2,13 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from core.events import WebSocketEmitter
-from core.types import AgentEvent
 from orchestration.main_flow import Director
 from fastapi import BackgroundTasks
 
+from server.types import ConnectionManager
+
 app = FastAPI()
 
-
-# --- Connection Manager ---
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: AgentEvent):
-        print(message)
-        for connection in self.active_connections:
-            await connection.send_json(message.model_dump_json())
 
 
 manager = ConnectionManager()

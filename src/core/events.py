@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 import asyncio
 
 from core.types import AgentEvent
+from server.types import ConnectionManager
 
-if TYPE_CHECKING:
-    from server.server import ConnectionManager
 
 
 class NoOpEmitter:
