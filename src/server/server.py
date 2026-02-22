@@ -1,7 +1,10 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from core.events import WebSocketEmitter
 from core.types import AgentEvent
+from orchestration.main_flow import Director
+from fastapi import BackgroundTasks
 
 app = FastAPI()
 
@@ -25,6 +28,7 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+director = Director(emitter=WebSocketEmitter(websocket_manager=manager))
 
 
 # --- Data Models ---
@@ -50,11 +54,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.post("/run")
-async def run_pipeline(data: UserPrompt):
-    """
-    The UI calls this to trigger the agent logic.
-    """
-
+async def run_pipeline(data: UserPrompt, background_tasks: BackgroundTasks):
+    # This sends the response to the UI immediately 
+    # while the Director works in the background
+    background_tasks.add_task(director.run, data.prompt)
     return {"status": "request_received"}
 
 

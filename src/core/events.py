@@ -1,12 +1,12 @@
-from typing import Protocol
+from __future__ import annotations
 
-from core.types import AgentEvent
-from server.server import ConnectionManager
+from typing import TYPE_CHECKING
 import asyncio
 
+from core.types import AgentEvent
 
-class EventEmitter(Protocol):
-    def notify(self, event: AgentEvent) -> None: ...
+if TYPE_CHECKING:
+    from server.server import ConnectionManager
 
 
 class NoOpEmitter:

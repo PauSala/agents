@@ -4,8 +4,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from core.events import EventEmitter
-from core.types import AgentEvent
+from core.types import AgentEvent, EventEmitter
 
 
 class LogEntry(BaseModel):

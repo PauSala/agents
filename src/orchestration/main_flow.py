@@ -2,7 +2,7 @@ from agents.decision_agent import DecisionAgent
 from agents.decision_response import DecisionType
 from agents.python_agent import PythonAgent
 from agents.tool_selection_agent import ToolSelectionAgent
-from core.events import EventEmitter
+from core.types import EventEmitter
 from core.llm_wrapper import LLM
 from core.log_collector import LogCollector
 from tools.python_tool import PythonCodeTool
